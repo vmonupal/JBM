@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --navy-950: #050d1a;
+  --navy-900: #0b1a2e;
+  --navy-800: #102540;
+  --navy-700: #19365c;
+  --navy-600: #234c80;
+  --gold-600: #b89028;
+  --gold-500: #d4af37;
+  --gold-400: #e2c35d;
+  --gold-300: #ecd78d;
+  --gold-100: #fbf6e5;
+  --cream-50: #fcfbf7;
+  --cream-100: #f7f4ec;
+  --cream-200: #ede8dc;
+
+  --background: #fcfbf7;
+  --foreground: #0b1a2e;
+  --card-bg: #ffffff;
+  --card-border: #ede8dc;
+  --muted: #64748b;
+  --accent-gold: #d4af37;
+  --accent-navy: #0b1a2e;
+}
+
+.dark {
+  --background: #060b13;
+  --foreground: #f1f5f9;
+  --card-bg: #0d1624;
+  --card-border: #1e2c40;
+  --muted: #94a3b8;
+  --accent-gold: #e2c35d;
+  --accent-navy: #38bdf8;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.font-cinzel {
+  font-family: var(--font-cinzel), serif;
+}
+
+.font-telugu {
+  font-family: var(--font-telugu), 'Gautami', 'Suranna', 'Mandali', 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.8;
+}
+
+/* Custom Scrollbar for smooth sacred reading */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(184, 144, 40, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(184, 144, 40, 0.45);
+}
+
+/* Church Gold Text Shimmer */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #d4af37 0%, #ecd78d 50%, #b89028 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Projector Fullscreen */
+.projector-container {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #03070d;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bible verse selection highlight */
+.verse-highlight {
+  background-color: rgba(212, 175, 55, 0.12);
+  border-left: 3px solid #d4af37;
+}
+
+/* Cross subtle watermark */
+.bg-church-pattern {
+  background-image: radial-gradient(rgba(212, 175, 55, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}

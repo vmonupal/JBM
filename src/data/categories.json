@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "Worship",
+    "description": "Songs of deep reverence, adoration, and intimacy with God.",
+    "icon": "Flame"
+  },
+  {
+    "id": 2,
+    "name": "Praise",
+    "description": "Joyful songs celebrating God's power, majesty, and goodness.",
+    "icon": "Music"
+  },
+  {
+    "id": 3,
+    "name": "Prayer",
+    "description": "Heartfelt supplication, intercession, and seeking God's face.",
+    "icon": "HeartHandshake"
+  },
+  {
+    "id": 4,
+    "name": "Christmas",
+    "description": "Celebration of the birth of our Lord and Savior Jesus Christ.",
+    "icon": "Sparkles"
+  },
+  {
+    "id": 5,
+    "name": "Easter",
+    "description": "Celebrating the triumphant resurrection and victory over the grave.",
+    "icon": "Sun"
+  },
+  {
+    "id": 6,
+    "name": "Youth",
+    "description": "High-energy, contemporary worship songs for young believers.",
+    "icon": "Zap"
+  },
+  {
+    "id": 7,
+    "name": "Sunday School",
+    "description": "Uplifting, memorable faith songs for children and Sunday school.",
+    "icon": "Smile"
+  },
+  {
+    "id": 8,
+    "name": "Traditional",
+    "description": "Timeless church hymns and historic spiritual classics.",
+    "icon": "BookOpen"
+  },
+  {
+    "id": 9,
+    "name": "Telugu Christian Songs",
+    "description": "Authentic Telugu devotional hymns and spiritual geethalu.",
+    "icon": "Scroll"
+  },
+  {
+    "id": 10,
+    "name": "English Christian Songs",
+    "description": "Classic and contemporary English gospel and worship songs.",
+    "icon": "Globe"
+  }
+]
