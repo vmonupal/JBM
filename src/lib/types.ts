@@ -28,6 +28,12 @@ export interface Song {
   category_id: number;
   category_name?: string;
   author: string | null;
+  composer?: string | null;
+  source_origin?: string | null;
+  language?: string | null;
+  lyrics_other?: string | null;
+  other_language_name?: string | null;
+  image_url?: string | null;
   audio_url: string | null;
   video_url: string | null;
   bible_reference?: string | null;
@@ -48,6 +54,12 @@ export interface SongVersion {
   category_id: number;
   category_name?: string;
   author: string | null;
+  composer?: string | null;
+  source_origin?: string | null;
+  language?: string | null;
+  lyrics_other?: string | null;
+  other_language_name?: string | null;
+  image_url?: string | null;
   audio_url: string | null;
   video_url: string | null;
   bible_reference: string | null;
@@ -63,12 +75,13 @@ export interface Category {
   song_count?: number;
 }
 
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: 'admin' | 'member';
-  created_at: string;
+export interface SiteSettings {
+  website_name: string;
+  church_display_name: string;
+  website_title: string;
+  website_description: string;
+  logo_url: string;
+  custom_domain: string;
 }
 
 export interface FavoriteItem {

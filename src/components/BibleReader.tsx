@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  ChevronLeft, ChevronRight, Copy, Share2, Heart, Bookmark, 
+  ChevronLeft, ChevronRight, Copy, Share2, Heart, 
   Tv, Type, Columns, Rows, Check, Search, BookOpen, Settings,
-  Sparkles, Info
+  Sparkles, Compass, ArrowRight, CornerDownRight
 } from 'lucide-react';
 import { BibleBook, BibleVerse } from '@/lib/types';
 import BibleSettingsModal, { BibleSettings } from './BibleSettingsModal';
+import { parseBibleReference } from '@/lib/bible-reference-parser';
 
 interface BibleReaderProps {
   initialBooks: BibleBook[];
@@ -34,15 +35,28 @@ export default function BibleReader({
   const [selectedChapter, setSelectedChapter] = useState<number>(
     Number(searchParams.get('chapter')) || initialChapter
   );
+  const [selectedVerseNumber, setSelectedVerseNumber] = useState<number | null>(
+    initialVerse || (searchParams.get('verse') ? Number(searchParams.get('verse')) : null)
+  );
+
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Settings State (Requirement 12 & 14)
+  // Filter books by Testament tab (Requirement 10)
+  const [selectedTestament, setSelectedTestament] = useState<'ALL' | 'OT' | 'NT'>('ALL');
+
+  // Prominent Search Bar (Requirement 7 & 8)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchStatus, setSearchStatus] = useState<string | null>(null);
+
+  // Settings State (Requirement 6, 12, 14)
   const [settings, setSettings] = useState<BibleSettings>({
     language: 'both',
     textSize: 'large',
     fontPercent: 100,
     layout: 'side-by-side',
+    columnWidth: '50-50',
+    textSpacing: 'relaxed',
     theme: 'dark',
     showVerseNumbers: true,
     showChapterSummary: true,
@@ -50,14 +64,14 @@ export default function BibleReader({
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Favorites & Copy feedback
+  // Bookmarks & Copy feedback
   const [copiedVerseId, setCopiedVerseId] = useState<number | null>(null);
   const [favoritedVerses, setFavoritedVerses] = useState<Record<number, boolean>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const selectedBook = books.find(b => b.id === selectedBookId) || books[0];
 
-  // Load saved settings from localStorage (Requirement 12 & 14: Save settings locally without account)
+  // Load saved settings from localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('rci_bible_display_settings');
@@ -66,7 +80,6 @@ export default function BibleReader({
       }
     } catch (e) {}
 
-    // Load local bookmarks
     try {
       const savedFavs = JSON.parse(localStorage.getItem('rci_favorite_verses') || '{}');
       setFavoritedVerses(savedFavs);
@@ -83,7 +96,7 @@ export default function BibleReader({
     });
   };
 
-  // Fetch verses whenever selected book or chapter changes
+  // Fetch verses
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -120,15 +133,62 @@ export default function BibleReader({
     return () => { isMounted = false; };
   }, [selectedBookId, selectedChapter, selectedBook]);
 
+  // Scroll to verse if target verse specified
+  useEffect(() => {
+    if (!loading && verses.length > 0 && selectedVerseNumber) {
+      setTimeout(() => {
+        const el = document.getElementById(`verse-${selectedVerseNumber}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 250);
+    }
+  }, [loading, verses, selectedVerseNumber]);
+
+  // Prominent Search handler (Requirement 7 & 8)
+  const handleQuickSearch = (queryText: string) => {
+    const q = (queryText || searchQuery).trim();
+    if (!q) return;
+
+    // 1. Try reference parser
+    const parsed = parseBibleReference(q);
+    if (parsed) {
+      setSelectedBookId(parsed.bookId);
+      setSelectedChapter(parsed.chapter);
+      if (parsed.verse) {
+        setSelectedVerseNumber(parsed.verse);
+        router.replace(`/bible?bookId=${parsed.bookId}&chapter=${parsed.chapter}&verse=${parsed.verse}`);
+      } else {
+        setSelectedVerseNumber(null);
+        router.replace(`/bible?bookId=${parsed.bookId}&chapter=${parsed.chapter}`);
+      }
+      showToast(`Opened ${parsed.bookEnglish} ${parsed.chapter}${parsed.verse ? `:${parsed.verse}` : ''}`);
+      return;
+    }
+
+    // 2. Otherwise navigate to full scripture search page
+    router.push(`/bible/search?q=${encodeURIComponent(q)}`);
+  };
+
   const handleBookChange = (bookId: number) => {
     setSelectedBookId(bookId);
     setSelectedChapter(1);
+    setSelectedVerseNumber(null);
     router.replace(`/bible?bookId=${bookId}&chapter=1`);
   };
 
   const handleChapterChange = (chapter: number) => {
     setSelectedChapter(chapter);
+    setSelectedVerseNumber(null);
     router.replace(`/bible?bookId=${selectedBookId}&chapter=${chapter}`);
+  };
+
+  const handleVerseSelect = (verseNum: number) => {
+    setSelectedVerseNumber(verseNum);
+    const el = document.getElementById(`verse-${verseNum}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const handlePrevChapter = () => {
@@ -159,6 +219,22 @@ export default function BibleReader({
     }
   };
 
+  const handlePrevVerse = () => {
+    if (selectedVerseNumber && selectedVerseNumber > 1) {
+      handleVerseSelect(selectedVerseNumber - 1);
+    } else if (verses.length > 0) {
+      handleVerseSelect(1);
+    }
+  };
+
+  const handleNextVerse = () => {
+    if (selectedVerseNumber && selectedVerseNumber < verses.length) {
+      handleVerseSelect(selectedVerseNumber + 1);
+    } else if (verses.length > 0) {
+      handleVerseSelect(1);
+    }
+  };
+
   const handleCopyVerse = (verse: BibleVerse) => {
     const text = `${selectedBook.name_english} ${verse.chapter_number}:${verse.verse_number} (${selectedBook.name_telugu})
 
@@ -175,9 +251,7 @@ English: ${verse.english_text}
 
   const handleShareVerse = async (verse: BibleVerse) => {
     const title = `${selectedBook.name_english} ${verse.chapter_number}:${verse.verse_number}`;
-    const text = `${title} (${selectedBook.name_telugu})
-"${verse.telugu_text}"
-"${verse.english_text}"`;
+    const text = `${title} (${selectedBook.name_telugu})\n"${verse.telugu_text}"\n"${verse.english_text}"`;
     const url = typeof window !== 'undefined' ? `${window.location.origin}/bible?bookId=${selectedBookId}&chapter=${selectedChapter}&verse=${verse.verse_number}` : '';
 
     if (navigator.share) {
@@ -205,7 +279,7 @@ English: ${verse.english_text}
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Font Size percent scale: [-] [100%] [+] (Requirement 12)
+  // Font size adjustments
   const decreaseFontSize = () => {
     const p = Math.max(settings.fontPercent - 10, 70);
     updateSettings({ fontPercent: p });
@@ -220,9 +294,21 @@ English: ${verse.english_text}
     updateSettings({ fontPercent: 100 });
   };
 
-  // Base font size computed from percentage
   const baseFontSizePx = Math.round(18 * (settings.fontPercent / 100));
   const teluguFontSizePx = Math.round(20 * (settings.fontPercent / 100));
+
+  // Line spacing
+  const lineHeightVal = settings.textSpacing === 'loose' ? 2.1 : settings.textSpacing === 'normal' ? 1.6 : 1.85;
+
+  // Column width ratio
+  const teluguColSpan = settings.columnWidth === '60-40' ? 'md:col-span-7' : settings.columnWidth === '40-60' ? 'md:col-span-5' : 'md:col-span-6';
+  const englishColSpan = settings.columnWidth === '60-40' ? 'md:col-span-5' : settings.columnWidth === '40-60' ? 'md:col-span-7' : 'md:col-span-6';
+
+  const filteredBooks = books.filter(b => {
+    if (selectedTestament === 'OT') return b.testament === 'OT';
+    if (selectedTestament === 'NT') return b.testament === 'NT';
+    return true;
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -235,44 +321,118 @@ English: ${verse.english_text}
         </div>
       )}
 
-      {/* Reader Controls Toolbar */}
+      {/* =========================================================================
+          PROMINENT BIBLE SEARCH BAR AT TOP OF BIBLE PAGE (Requirement 7 & 8)
+          ========================================================================= */}
+      <div className="bg-white dark:bg-slate-900 border-2 border-amber-500/30 rounded-3xl p-4 sm:p-6 shadow-md space-y-3">
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleQuickSearch(searchQuery); }}
+          className="relative flex items-center"
+        >
+          <Search className="w-5 h-5 text-amber-500 absolute left-4" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="🔍 Search Bible — Book, Chapter, Verse, or Word"
+            className="w-full pl-12 pr-28 py-3.5 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm sm:text-base rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
+          />
+          <button
+            type="submit"
+            className="absolute right-2 px-5 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white font-bold text-xs sm:text-sm rounded-xl shadow hover:scale-105 transition-all"
+          >
+            Search
+          </button>
+        </form>
+
+        {/* Examples shown under search box (Requirement 7) */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 pt-0.5">
+          <span className="font-semibold text-slate-400 mr-1">Examples:</span>
+          {[
+            { label: 'John 3:16', val: 'John 3:16' },
+            { label: 'Genesis 1', val: 'Genesis 1' },
+            { label: 'Psalm 23', val: 'Psalm 23' },
+            { label: 'Matthew 5:3', val: 'Matthew 5:3' },
+            { label: 'ప్రేమ', val: 'ప్రేమ' },
+            { label: 'God', val: 'God' },
+            { label: 'యోహాను 3:16', val: 'యోహాను 3:16' }
+          ].map((ex) => (
+            <button
+              key={ex.val}
+              type="button"
+              onClick={() => { setSearchQuery(ex.val); handleQuickSearch(ex.val); }}
+              className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-lg border border-amber-500/20 font-medium transition-colors"
+            >
+              "{ex.label}"
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* =========================================================================
+          BIBLE NAVIGATION TOOLBAR (Requirement 10)
+          ========================================================================= */}
       <div className="bg-white dark:bg-slate-900 border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xs transition-colors space-y-4">
         
-        {/* Row 1: Book & Chapter Picker + Projector & Settings */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+        {/* Navigation Row 1: Testament, Book, Chapter, Verse */}
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800">
           
-          {/* Book & Chapter Pickers */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {/* Book Dropdown (All 66 Books) */}
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3">
+            
+            {/* TESTAMENT (Requirement 10) */}
+            <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+              <button
+                type="button"
+                onClick={() => setSelectedTestament('OT')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  selectedTestament === 'OT' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
+                }`}
+              >
+                Old Testament (39)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTestament('NT')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  selectedTestament === 'NT' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
+                }`}
+              >
+                New Testament (27)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTestament('ALL')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  selectedTestament === 'ALL' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
+                }`}
+              >
+                All 66
+              </button>
+            </div>
+
+            {/* BOOK SELECTOR (Requirement 10) */}
+            <div className="flex items-center space-x-1.5">
+              <span className="text-[11px] font-bold uppercase text-slate-400">Book:</span>
               <select
                 value={selectedBookId}
                 onChange={(e) => handleBookChange(Number(e.target.value))}
-                className="appearance-none bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm sm:text-base py-2 pl-3 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                className="bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-xs sm:text-sm py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
               >
-                <optgroup label="New Testament (క్రొత్త నిబంధన - 27 గ్రంథాలు)">
-                  {books.filter(b => b.testament === 'NT').map(b => (
-                    <option key={b.id} value={b.id}>
-                      {b.name_english} ({b.name_telugu})
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Old Testament (పాత నిబంధన - 39 గ్రంథాలు)">
-                  {books.filter(b => b.testament === 'OT').map(b => (
-                    <option key={b.id} value={b.id}>
-                      {b.name_english} ({b.name_telugu})
-                    </option>
-                  ))}
-                </optgroup>
+                {filteredBooks.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.name_english} ({b.name_telugu})
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Chapter Dropdown */}
-            <div className="relative">
+            {/* CHAPTER SELECTOR - SHOWS ALL CHAPTERS (Requirement 10) */}
+            <div className="flex items-center space-x-1.5">
+              <span className="text-[11px] font-bold uppercase text-slate-400">Chapter:</span>
               <select
                 value={selectedChapter}
                 onChange={(e) => handleChapterChange(Number(e.target.value))}
-                className="appearance-none bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-sm sm:text-base py-2 pl-3 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                className="bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-xs sm:text-sm py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
               >
                 {Array.from({ length: selectedBook.total_chapters }, (_, i) => i + 1).map(num => (
                   <option key={num} value={num}>
@@ -282,65 +442,72 @@ English: ${verse.english_text}
               </select>
             </div>
 
-            {/* Quick Prev / Next Chapter Buttons */}
+            {/* VERSE SELECTOR (Requirement 10) */}
+            <div className="flex items-center space-x-1.5">
+              <span className="text-[11px] font-bold uppercase text-slate-400">Verse:</span>
+              <select
+                value={selectedVerseNumber || ''}
+                onChange={(e) => e.target.value ? handleVerseSelect(Number(e.target.value)) : setSelectedVerseNumber(null)}
+                className="bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold text-xs sm:text-sm py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+              >
+                <option value="">All Verses</option>
+                {verses.map(v => (
+                  <option key={v.verse_number} value={v.verse_number}>
+                    Verse {v.verse_number}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Previous & Next Chapter Navigation (Requirement 10) */}
             <div className="flex items-center space-x-1">
               <button
                 onClick={handlePrevChapter}
                 title="Previous Chapter"
                 className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-amber-500/10 text-slate-700 dark:text-slate-300 hover:text-amber-600 transition-colors"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={handleNextChapter}
                 title="Next Chapter"
                 className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-amber-500/10 text-slate-700 dark:text-slate-300 hover:text-amber-600 transition-colors"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
+
           </div>
 
-          {/* Right: [ BIBLE PROJECTOR ] & Settings & Search */}
-          <div className="flex items-center space-x-2 sm:space-x-3 justify-end">
-            {/* [ BIBLE PROJECTOR ] BUTTON (Requirement 15) */}
+          {/* Right: Projector & Settings */}
+          <div className="flex items-center space-x-2 justify-end">
             <Link
               href={`/bible/projector?bookId=${selectedBookId}&chapter=${selectedChapter}`}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-slate-950 text-amber-300 border border-amber-500/50 hover:bg-slate-900 font-bold text-xs sm:text-sm rounded-xl shadow hover:scale-105 transition-all"
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-950 text-amber-300 border border-amber-500/50 hover:bg-slate-900 font-bold text-xs sm:text-sm rounded-xl shadow hover:scale-105 transition-all"
             >
               <Tv className="w-4 h-4 text-amber-400" />
               <span>[ BIBLE PROJECTOR ]</span>
             </Link>
 
-            {/* Bible Settings Button (Requirement 14) */}
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center space-x-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-500 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all"
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-500 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all"
               title="Open Bible Settings"
             >
               <Settings className="w-4 h-4 text-amber-500" />
               <span className="hidden sm:inline">Settings</span>
             </button>
-
-            {/* Search link */}
-            <Link
-              href="/bible/search"
-              title="Search Bible"
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 text-slate-600 dark:text-slate-300 hover:text-amber-600 transition-colors"
-            >
-              <Search className="w-4 h-4" />
-            </Link>
           </div>
 
         </div>
 
-        {/* Row 2: MANDATED LANGUAGE DISPLAY BUTTONS & FONT SIZE & LAYOUT (Requirement 12) */}
+        {/* Row 2: MANDATED LANGUAGE SWITCHING BUTTONS & FONT SIZE & LAYOUT (Requirement 6 & 12) */}
         <div className="flex flex-wrap items-center justify-between gap-4 text-xs">
           
-          {/* BIBLE LANGUAGE DISPLAY BUTTONS:
-              [ TELUGU ]  [ ENGLISH ]  [ TELUGU + ENGLISH ] */}
+          {/* Three clear options mandated by Requirement 6:
+              [ తెలుగు మాత్రమే ]  [ English Only ]  [ తెలుగు + English ] */}
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">Display:</span>
+            <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">Language:</span>
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
               <button
                 onClick={() => updateSettings({ language: 'telugu' })}
@@ -350,7 +517,7 @@ English: ${verse.english_text}
                     : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
                 }`}
               >
-                [ TELUGU ]
+                [ తెలుగు మాత్రమే ]
               </button>
 
               <button
@@ -361,7 +528,7 @@ English: ${verse.english_text}
                     : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
                 }`}
               >
-                [ ENGLISH ]
+                [ English Only ]
               </button>
 
               <button
@@ -372,12 +539,12 @@ English: ${verse.english_text}
                     : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
                 }`}
               >
-                [ TELUGU + ENGLISH ]
+                [ తెలుగు + English ]
               </button>
             </div>
           </div>
 
-          {/* FONT SIZE CONTROLS: Font Size: [-] [100%] [+] (Requirement 12) */}
+          {/* FONT SIZE CONTROLS: Font Size: [-] [100%] [+] (Requirement 6 & 12) */}
           <div className="flex items-center space-x-2">
             <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">Font Size:</span>
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -405,31 +572,32 @@ English: ${verse.english_text}
             </div>
           </div>
 
-          {/* LAYOUT CONTROLS: [ Side by Side ] [ Stacked ] (Requirement 12) */}
+          {/* LAYOUT CONTROLS: [ Side by Side ] [ Stacked ] (Requirement 5, 6, 12) */}
           {settings.language === 'both' && (
             <div className="flex items-center space-x-2">
               <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">Layout:</span>
               <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                 <button
                   onClick={() => updateSettings({ layout: 'side-by-side' })}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg font-bold transition-all flex items-center space-x-1 ${
                     settings.layout === 'side-by-side'
                       ? 'bg-amber-500 text-slate-950 shadow-xs'
                       : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
                   }`}
                 >
-                  [ Side by Side ]
+                  <Columns className="w-3.5 h-3.5" />
+                  <span>[ Side by Side ]</span>
                 </button>
-
                 <button
                   onClick={() => updateSettings({ layout: 'stacked' })}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg font-bold transition-all flex items-center space-x-1 ${
                     settings.layout === 'stacked'
                       ? 'bg-amber-500 text-slate-950 shadow-xs'
                       : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
                   }`}
                 >
-                  [ Stacked ]
+                  <Rows className="w-3.5 h-3.5" />
+                  <span>[ Stacked ]</span>
                 </button>
               </div>
             </div>
@@ -439,38 +607,39 @@ English: ${verse.english_text}
 
       </div>
 
-      {/* Book Information Banner (toggled by settings.showBookInfo) */}
+      {/* =========================================================================
+          CHAPTER SUMMARY & BOOK INFO (Requirement 12)
+          ========================================================================= */}
       {settings.showBookInfo && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center space-x-2">
-            <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="font-semibold text-slate-800 dark:text-slate-200">
-              {selectedBook.testament === 'NT' ? 'New Testament (క్రొత్త నిబంధన)' : 'Old Testament (పాత నిబంధన)'} • {selectedBook.total_chapters} Chapters in total
-            </span>
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center space-x-2 text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+              <span>{selectedBook.testament === 'OT' ? 'Old Testament (పాత నిబంధన)' : 'New Testament (క్రొత్త నిబంధన)'}</span>
+              <span>•</span>
+              <span>Book #{selectedBook.book_order} of 66</span>
+            </div>
+            <h1 className="font-cinzel text-2xl sm:text-4xl font-black text-slate-900 dark:text-amber-100 mt-1">
+              {selectedBook.name_english} • Chapter {selectedChapter}
+            </h1>
+            <p className="font-telugu text-lg sm:text-xl font-bold text-amber-800 dark:text-amber-300 mt-0.5">
+              {selectedBook.name_telugu} • {selectedChapter}వ అధ్యాయము
+            </p>
           </div>
-          <span className="text-[11px] text-slate-500">
-            Authorized Holy Scripture • Telugu & English King James Version
-          </span>
+
+          <div className="text-right text-xs text-slate-500 shrink-0">
+            <p className="font-bold text-slate-800 dark:text-slate-200">
+              Total Chapters: {selectedBook.total_chapters}
+            </p>
+            <p className="text-amber-600 dark:text-amber-400 font-semibold">
+              Verses in Chapter: {verses.length}
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Chapter Title Header & Summary */}
-      <div className="text-center pt-2 pb-4 border-b border-amber-500/20 space-y-1">
-        <h1 className="text-2xl sm:text-4xl font-bold font-cinzel text-slate-900 dark:text-amber-100 tracking-wide">
-          {selectedBook.name_english} {selectedChapter}
-        </h1>
-        <p className="text-xl sm:text-2xl font-telugu text-amber-700 dark:text-amber-400 font-semibold">
-          {selectedBook.name_telugu} {selectedChapter}వ అధ్యాయము
-        </p>
-
-        {settings.showChapterSummary && (
-          <p className="text-xs text-slate-500 max-w-lg mx-auto pt-1">
-            Holy Bible Scripture • Chapter {selectedChapter} of {selectedBook.total_chapters}
-          </p>
-        )}
-      </div>
-
-      {/* Bilingual Bible Verses Display */}
+      {/* =========================================================================
+          MANDATED PARALLEL / SIDE-BY-SIDE BIBLE DISPLAY (Requirement 5 & 12)
+          ========================================================================= */}
       {loading ? (
         <div className="py-24 text-center space-y-3">
           <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -486,235 +655,170 @@ English: ${verse.english_text}
       ) : (
         <div className="space-y-4">
           
-          {/* Desktop Table Headers when Side-by-Side */}
+          {/* Desktop Table Headers when Side-by-Side (Requirement 5) */}
           {settings.language === 'both' && settings.layout === 'side-by-side' && (
-            <div className="hidden md:grid md:grid-cols-12 gap-6 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 border-b border-amber-500/20 bg-amber-50/40 dark:bg-slate-800/40 rounded-xl">
-              {settings.showVerseNumbers && <div className="col-span-1 text-center">Verse</div>}
-              <div className={settings.showVerseNumbers ? 'col-span-5' : 'col-span-6'}>
-                TELUGU (పరిశుద్ధ గ్రంథము)
+            <div className="hidden md:grid md:grid-cols-12 gap-6 px-6 py-3 text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 border-b-2 border-amber-500/30 bg-amber-50/60 dark:bg-slate-800/60 rounded-2xl shadow-xs">
+              <div className={teluguColSpan}>
+                TELUGU BIBLE (పరిశుద్ధ గ్రంథము)
               </div>
-              <div className={settings.showVerseNumbers ? 'col-span-5' : 'col-span-6'}>
-                ENGLISH (King James Version)
+              <div className={englishColSpan}>
+                ENGLISH BIBLE (King James Version)
               </div>
-              <div className="col-span-1 text-right">Actions</div>
             </div>
           )}
 
+          {/* Verses Loop */}
           {verses.map((verse) => {
             const isFav = !!favoritedVerses[verse.id];
+            const isTarget = selectedVerseNumber === verse.verse_number;
 
             return (
               <div
                 key={verse.id}
                 id={`verse-${verse.verse_number}`}
-                className="group relative bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 hover:border-amber-500/40 hover:shadow-md transition-all"
+                className={`group relative bg-white dark:bg-slate-900 border rounded-2xl p-4 sm:p-5 transition-all ${
+                  isTarget
+                    ? 'border-amber-500 ring-2 ring-amber-500/40 shadow-lg bg-amber-50/30 dark:bg-slate-800/80'
+                    : 'border-slate-200/90 dark:border-slate-800 hover:border-amber-500/40 hover:shadow-md'
+                }`}
               >
-                {/* 1. Side-by-Side Bilingual Layout (Desktop: TELUGU | ENGLISH, Mobile: TELUGU / ENGLISH) */}
+                {/* Verse Header Badge with Quick Action Tools */}
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center space-x-2">
+                    {settings.showVerseNumbers && (
+                      <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-bold text-xs sm:text-sm font-mono">
+                        VERSE {verse.verse_number}
+                      </span>
+                    )}
+                    <span className="text-[11px] font-medium text-slate-400">
+                      {selectedBook.name_english} {verse.chapter_number}:{verse.verse_number}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-1.5 opacity-90 md:opacity-40 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => toggleFavoriteVerse(verse)}
+                      title={isFav ? 'Remove Bookmark' : 'Save Bookmark Locally'}
+                      className={`p-1.5 rounded-lg border transition-colors ${
+                        isFav
+                          ? 'bg-rose-500/10 border-rose-500/40 text-rose-500'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-500'
+                      }`}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
+                    </button>
+
+                    <button
+                      onClick={() => handleCopyVerse(verse)}
+                      title="Copy Verse"
+                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-500 transition-colors"
+                    >
+                      {copiedVerseId === verse.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+
+                    <button
+                      onClick={() => handleShareVerse(verse)}
+                      title="Share Verse"
+                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-500 transition-colors"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* =========================================================================
+                    LAYOUT 1: MANDATED PARALLEL SIDE-BY-SIDE (Requirement 5)
+                    Desktop/Tablet: TELUGU | ENGLISH
+                    Mobile: Two synchronized columns or clean stacked
+                    ========================================================================= */}
                 {settings.language === 'both' && settings.layout === 'side-by-side' ? (
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-baseline">
                     
-                    {/* Verse Number */}
-                    {settings.showVerseNumbers && (
-                      <div className="md:col-span-1 flex items-center md:justify-center">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-bold text-xs sm:text-sm font-mono">
-                          {verse.verse_number}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Telugu Column */}
+                    {/* Column 1: Telugu Bible */}
                     <div
-                      style={{ fontSize: `${teluguFontSizePx}px`, lineHeight: 1.8 }}
-                      className={`md:col-span-5 text-slate-900 dark:text-slate-100 font-telugu font-semibold`}
+                      style={{ fontSize: `${teluguFontSizePx}px`, lineHeight: lineHeightVal }}
+                      className={`${teluguColSpan} text-slate-900 dark:text-slate-100 font-telugu font-semibold`}
                     >
-                      {/* Mobile verse label if verse numbers on */}
-                      {settings.showVerseNumbers && (
-                        <span className="md:hidden text-xs font-bold text-amber-600 mr-2 font-mono">
-                          v{verse.verse_number}
-                        </span>
-                      )}
                       {verse.telugu_text}
                     </div>
 
-                    {/* English Column */}
+                    {/* Column 2: English Bible */}
                     <div
-                      style={{ fontSize: `${baseFontSizePx}px`, lineHeight: 1.6 }}
-                      className={`md:col-span-5 text-slate-700 dark:text-slate-300 font-normal`}
+                      style={{ fontSize: `${baseFontSizePx}px`, lineHeight: lineHeightVal * 0.9 }}
+                      className={`${englishColSpan} text-slate-700 dark:text-slate-300 font-normal pl-0 md:pl-2 md:border-l border-slate-100 dark:border-slate-800`}
                     >
                       {verse.english_text}
-                    </div>
-
-                    {/* Verse Actions */}
-                    <div className="md:col-span-1 flex md:flex-col items-center justify-end space-x-2 md:space-x-0 md:space-y-1.5 opacity-90 md:opacity-40 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => toggleFavoriteVerse(verse)}
-                        title={isFav ? 'Remove Bookmark' : 'Save Bookmark Locally'}
-                        className={`p-1.5 rounded-lg border transition-colors ${
-                          isFav
-                            ? 'bg-rose-500/10 border-rose-500/40 text-rose-500'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-500'
-                        }`}
-                      >
-                        <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
-                      </button>
-
-                      <button
-                        onClick={() => handleCopyVerse(verse)}
-                        title="Copy Verse"
-                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-500 transition-colors"
-                      >
-                        {copiedVerseId === verse.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-
-                      <button
-                        onClick={() => handleShareVerse(verse)}
-                        title="Share Verse"
-                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-500 transition-colors"
-                      >
-                        <Share2 className="w-3.5 h-3.5" />
-                      </button>
                     </div>
 
                   </div>
                 ) : settings.language === 'both' && settings.layout === 'stacked' ? (
-                  /* 2. Stacked Bilingual Layout (Telugu on top, English underneath) */
+                  /* LAYOUT 2: Stacked Bilingual */
                   <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        {/* Telugu Text */}
-                        <div
-                          style={{ fontSize: `${teluguFontSizePx}px`, lineHeight: 1.8 }}
-                          className="font-telugu font-semibold text-slate-900 dark:text-slate-100"
-                        >
-                          {settings.showVerseNumbers && (
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-bold text-xs font-mono mr-2.5">
-                              {verse.verse_number}
-                            </span>
-                          )}
-                          {verse.telugu_text}
-                        </div>
-
-                        {/* English Text */}
-                        <div
-                          style={{ fontSize: `${baseFontSizePx}px`, lineHeight: 1.6 }}
-                          className="text-slate-700 dark:text-slate-300 font-normal pl-1 border-l-2 border-amber-500/30"
-                        >
-                          {verse.english_text}
-                        </div>
-                      </div>
-
-                      {/* Verse Actions */}
-                      <div className="flex items-center space-x-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => toggleFavoriteVerse(verse)}
-                          title="Save Bookmark"
-                          className={`p-1.5 rounded-lg border transition-colors ${
-                            isFav ? 'bg-rose-500/10 border-rose-500 text-rose-500' : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-500'
-                          }`}
-                        >
-                          <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
-                        </button>
-                        <button
-                          onClick={() => handleCopyVerse(verse)}
-                          title="Copy Verse"
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-500"
-                        >
-                          {copiedVerseId === verse.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                        <button
-                          onClick={() => handleShareVerse(verse)}
-                          title="Share Verse"
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-500"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                    <div
+                      style={{ fontSize: `${teluguFontSizePx}px`, lineHeight: lineHeightVal }}
+                      className="font-telugu font-semibold text-slate-900 dark:text-slate-100"
+                    >
+                      {verse.telugu_text}
+                    </div>
+                    <div
+                      style={{ fontSize: `${baseFontSizePx}px`, lineHeight: lineHeightVal * 0.9 }}
+                      className="text-slate-700 dark:text-slate-300 font-normal pl-3 border-l-2 border-amber-500/40"
+                    >
+                      {verse.english_text}
                     </div>
                   </div>
                 ) : settings.language === 'telugu' ? (
-                  /* 3. Telugu Only Layout */
-                  <div className="flex items-start justify-between gap-4">
-                    <div
-                      style={{ fontSize: `${teluguFontSizePx}px`, lineHeight: 1.85 }}
-                      className="font-telugu font-semibold text-slate-900 dark:text-slate-100 flex-1"
-                    >
-                      {settings.showVerseNumbers && (
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-bold text-xs font-mono mr-2.5">
-                          {verse.verse_number}
-                        </span>
-                      )}
-                      {verse.telugu_text}
-                    </div>
-
-                    <div className="flex items-center space-x-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => toggleFavoriteVerse(verse)}
-                        className={`p-1.5 rounded-lg border ${isFav ? 'text-rose-500 border-rose-500' : 'border-slate-200 dark:border-slate-700 text-slate-400'}`}
-                      >
-                        <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
-                      </button>
-                      <button onClick={() => handleCopyVerse(verse)} className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400">
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                  /* LAYOUT 3: Telugu Only */
+                  <div
+                    style={{ fontSize: `${teluguFontSizePx}px`, lineHeight: lineHeightVal }}
+                    className="font-telugu font-semibold text-slate-900 dark:text-slate-100"
+                  >
+                    {verse.telugu_text}
                   </div>
                 ) : (
-                  /* 4. English Only Layout */
-                  <div className="flex items-start justify-between gap-4">
-                    <div
-                      style={{ fontSize: `${baseFontSizePx}px`, lineHeight: 1.65 }}
-                      className="text-slate-800 dark:text-slate-200 font-normal flex-1"
-                    >
-                      {settings.showVerseNumbers && (
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-bold text-xs font-mono mr-2.5">
-                          {verse.verse_number}
-                        </span>
-                      )}
-                      {verse.english_text}
-                    </div>
-
-                    <div className="flex items-center space-x-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => toggleFavoriteVerse(verse)}
-                        className={`p-1.5 rounded-lg border ${isFav ? 'text-rose-500 border-rose-500' : 'border-slate-200 dark:border-slate-700 text-slate-400'}`}
-                      >
-                        <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
-                      </button>
-                      <button onClick={() => handleCopyVerse(verse)} className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400">
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                  /* LAYOUT 4: English Only */
+                  <div
+                    style={{ fontSize: `${baseFontSizePx}px`, lineHeight: lineHeightVal * 0.9 }}
+                    className="text-slate-800 dark:text-slate-200 font-normal"
+                  >
+                    {verse.english_text}
                   </div>
                 )}
 
               </div>
             );
           })}
+
+          {/* Chapter Bottom Navigation */}
+          <div className="pt-6 pb-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-amber-500/20">
+            <button
+              onClick={handlePrevChapter}
+              className="w-full sm:w-auto px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center space-x-2 transition-all hover:scale-105"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Previous Chapter</span>
+            </button>
+
+            <div className="text-center">
+              <p className="font-cinzel text-xs font-bold text-amber-700 dark:text-amber-400">
+                {selectedBook.name_english} Chapter {selectedChapter} of {selectedBook.total_chapters}
+              </p>
+              <p className="font-telugu text-[11px] text-slate-400">
+                {selectedBook.name_telugu} {selectedChapter}వ అధ్యాయము
+              </p>
+            </div>
+
+            <button
+              onClick={handleNextChapter}
+              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white font-bold text-xs flex items-center justify-center space-x-2 transition-all hover:scale-105 shadow-md"
+            >
+              <span>Next Chapter</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
         </div>
       )}
-
-      {/* Chapter Stepper Bottom Navigation */}
-      <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <button
-          onClick={handlePrevChapter}
-          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-amber-500 text-xs sm:text-sm font-semibold transition-all hover:scale-105"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Previous Chapter</span>
-        </button>
-
-        <div className="text-center text-xs text-slate-500">
-          <span>{selectedBook.name_english} {selectedChapter} / {selectedBook.total_chapters}</span>
-        </div>
-
-        <button
-          onClick={handleNextChapter}
-          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold shadow-md transition-all hover:scale-105"
-        >
-          <span>Next Chapter</span>
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
 
       {/* Bible Settings Modal (Requirement 14) */}
       <BibleSettingsModal

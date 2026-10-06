@@ -1,7 +1,8 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { BibleBook, BibleVerse, Song, SongVersion, Category, User, FavoriteItem, ReadingHistoryItem, AdminStats } from './types';
+import bcrypt from 'bcryptjs';
+import { BibleBook, BibleVerse, Song, SongVersion, Category, SiteSettings, FavoriteItem, ReadingHistoryItem, AdminStats } from './types';
 
 const dbPath = path.join(process.cwd(), 'data', 'church.db');
 
@@ -19,7 +20,7 @@ export function getDb(): Database.Database {
     global.__church_db = new Database(dbPath);
     global.__church_db.pragma('journal_mode = WAL');
 
-    // Run schema migrations for songs & versions safely
+    // Run schema migrations for songs, versions & site_settings safely
     try {
       const tableInfo = global.__church_db.pragma('table_info(songs)') as any[];
       const cols = tableInfo.map(c => c.name);
@@ -29,6 +30,24 @@ export function getDb(): Database.Database {
       if (!cols.includes('updated_at')) {
         global.__church_db.prepare('ALTER TABLE songs ADD COLUMN updated_at DATETIME').run();
         global.__church_db.prepare('UPDATE songs SET updated_at = created_at WHERE updated_at IS NULL').run();
+      }
+      if (!cols.includes('language')) {
+        global.__church_db.prepare("ALTER TABLE songs ADD COLUMN language TEXT DEFAULT 'Telugu + English'").run();
+      }
+      if (!cols.includes('lyrics_other')) {
+        global.__church_db.prepare('ALTER TABLE songs ADD COLUMN lyrics_other TEXT').run();
+      }
+      if (!cols.includes('other_language_name')) {
+        global.__church_db.prepare('ALTER TABLE songs ADD COLUMN other_language_name TEXT').run();
+      }
+      if (!cols.includes('composer')) {
+        global.__church_db.prepare('ALTER TABLE songs ADD COLUMN composer TEXT').run();
+      }
+      if (!cols.includes('source_origin')) {
+        global.__church_db.prepare('ALTER TABLE songs ADD COLUMN source_origin TEXT').run();
+      }
+      if (!cols.includes('image_url')) {
+        global.__church_db.prepare('ALTER TABLE songs ADD COLUMN image_url TEXT').run();
       }
 
       global.__church_db.prepare(`
@@ -43,12 +62,26 @@ export function getDb(): Database.Database {
           lyrics_telugu TEXT,
           category_id INTEGER,
           author TEXT,
+          composer TEXT,
+          source_origin TEXT,
+          language TEXT,
+          lyrics_other TEXT,
+          other_language_name TEXT,
+          image_url TEXT,
           audio_url TEXT,
           video_url TEXT,
           bible_reference TEXT,
           change_summary TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (song_id) REFERENCES songs (id) ON DELETE CASCADE
+        )
+      `).run();
+
+      global.__church_db.prepare(`
+        CREATE TABLE IF NOT EXISTS site_settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `).run();
     } catch (e) {
@@ -152,12 +185,17 @@ export function getSongs(categoryId?: number, query?: string): Song[] {
       OR s.title_telugu LIKE ? 
       OR s.lyrics_english LIKE ? 
       OR s.lyrics_telugu LIKE ? 
+      OR s.lyrics_other LIKE ?
+      OR s.language LIKE ?
+      OR s.other_language_name LIKE ?
       OR CAST(s.song_number AS TEXT) LIKE ?
       OR s.author LIKE ?
+      OR s.composer LIKE ?
+      OR s.source_origin LIKE ?
       OR c.name LIKE ?
       OR s.bible_reference LIKE ?
     )`;
-    params.push(p, p, p, p, p, p, p, p);
+    params.push(p, p, p, p, p, p, p, p, p, p, p, p, p);
   }
 
   sql += ` ORDER BY s.song_number ASC`;
@@ -180,8 +218,14 @@ export function addSong(song: {
   title_telugu: string;
   lyrics_english: string;
   lyrics_telugu: string;
+  lyrics_other?: string;
+  language?: string;
+  other_language_name?: string;
   category_id: number;
   author?: string;
+  composer?: string;
+  source_origin?: string;
+  image_url?: string;
   audio_url?: string;
   video_url?: string;
   bible_reference?: string;
@@ -190,16 +234,23 @@ export function addSong(song: {
   const res = db.prepare(`
     INSERT INTO songs (
       song_number, title_english, title_telugu, lyrics_english, lyrics_telugu,
-      category_id, author, audio_url, video_url, bible_reference, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      lyrics_other, language, other_language_name, category_id, author,
+      composer, source_origin, image_url, audio_url, video_url, bible_reference, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
   `).run(
     song.song_number,
     song.title_english,
     song.title_telugu,
     song.lyrics_english,
     song.lyrics_telugu,
+    song.lyrics_other || null,
+    song.language || 'Telugu + English',
+    song.other_language_name || null,
     song.category_id,
     song.author || null,
+    song.composer || null,
+    song.source_origin || null,
+    song.image_url || null,
     song.audio_url || null,
     song.video_url || null,
     song.bible_reference || null
@@ -211,9 +262,10 @@ export function addSong(song: {
     db.prepare(`
       INSERT INTO song_versions (
         song_id, version_number, song_number, title_english, title_telugu,
-        lyrics_english, lyrics_telugu, category_id, author, audio_url,
+        lyrics_english, lyrics_telugu, lyrics_other, language, other_language_name,
+        category_id, author, composer, source_origin, image_url, audio_url,
         video_url, bible_reference, change_summary, created_at
-      ) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Initial creation', CURRENT_TIMESTAMP)
+      ) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Initial creation', CURRENT_TIMESTAMP)
     `).run(
       songId,
       song.song_number,
@@ -221,8 +273,14 @@ export function addSong(song: {
       song.title_telugu,
       song.lyrics_english,
       song.lyrics_telugu,
+      song.lyrics_other || null,
+      song.language || 'Telugu + English',
+      song.other_language_name || null,
       song.category_id,
       song.author || null,
+      song.composer || null,
+      song.source_origin || null,
+      song.image_url || null,
       song.audio_url || null,
       song.video_url || null,
       song.bible_reference || null
@@ -247,9 +305,10 @@ export function updateSong(id: number, song: Partial<Song>, changeSummary = 'Upd
     db.prepare(`
       INSERT INTO song_versions (
         song_id, version_number, song_number, title_english, title_telugu,
-        lyrics_english, lyrics_telugu, category_id, author, audio_url,
+        lyrics_english, lyrics_telugu, lyrics_other, language, other_language_name,
+        category_id, author, composer, source_origin, image_url, audio_url,
         video_url, bible_reference, change_summary, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(
       id,
       nextVersionNum,
@@ -258,8 +317,14 @@ export function updateSong(id: number, song: Partial<Song>, changeSummary = 'Upd
       current.title_telugu,
       current.lyrics_english,
       current.lyrics_telugu,
+      current.lyrics_other || null,
+      current.language || 'Telugu + English',
+      current.other_language_name || null,
       current.category_id,
       current.author || null,
+      current.composer || null,
+      current.source_origin || null,
+      current.image_url || null,
       current.audio_url || null,
       current.video_url || null,
       current.bible_reference || null,
@@ -277,8 +342,14 @@ export function updateSong(id: number, song: Partial<Song>, changeSummary = 'Upd
       title_telugu = COALESCE(?, title_telugu),
       lyrics_english = COALESCE(?, lyrics_english),
       lyrics_telugu = COALESCE(?, lyrics_telugu),
+      lyrics_other = COALESCE(?, lyrics_other),
+      language = COALESCE(?, language),
+      other_language_name = COALESCE(?, other_language_name),
       category_id = COALESCE(?, category_id),
       author = COALESCE(?, author),
+      composer = COALESCE(?, composer),
+      source_origin = COALESCE(?, source_origin),
+      image_url = COALESCE(?, image_url),
       audio_url = COALESCE(?, audio_url),
       video_url = COALESCE(?, video_url),
       bible_reference = COALESCE(?, bible_reference),
@@ -290,8 +361,14 @@ export function updateSong(id: number, song: Partial<Song>, changeSummary = 'Upd
     song.title_telugu ?? null,
     song.lyrics_english ?? null,
     song.lyrics_telugu ?? null,
+    song.lyrics_other ?? null,
+    song.language ?? null,
+    song.other_language_name ?? null,
     song.category_id ?? null,
     song.author ?? null,
+    song.composer ?? null,
+    song.source_origin ?? null,
+    song.image_url ?? null,
     song.audio_url ?? null,
     song.video_url ?? null,
     song.bible_reference ?? null,
@@ -322,8 +399,14 @@ export function duplicateSong(id: number): number | null {
     title_telugu: `${current.title_telugu} (నకలు)`,
     lyrics_english: current.lyrics_english,
     lyrics_telugu: current.lyrics_telugu,
+    lyrics_other: current.lyrics_other || undefined,
+    language: current.language || 'Telugu + English',
+    other_language_name: current.other_language_name || undefined,
     category_id: current.category_id,
     author: current.author || undefined,
+    composer: current.composer || undefined,
+    source_origin: current.source_origin || undefined,
+    image_url: current.image_url || undefined,
     audio_url: current.audio_url || undefined,
     video_url: current.video_url || undefined,
     bible_reference: current.bible_reference || undefined
@@ -354,8 +437,14 @@ export function restoreSongVersion(songId: number, versionId: number): boolean {
     title_telugu: version.title_telugu,
     lyrics_english: version.lyrics_english,
     lyrics_telugu: version.lyrics_telugu,
+    lyrics_other: version.lyrics_other,
+    language: version.language,
+    other_language_name: version.other_language_name,
     category_id: version.category_id,
     author: version.author,
+    composer: version.composer,
+    source_origin: version.source_origin,
+    image_url: version.image_url,
     audio_url: version.audio_url,
     video_url: version.video_url,
     bible_reference: version.bible_reference
@@ -475,3 +564,69 @@ export function getAdminStats(): AdminStats {
     totalCategories
   };
 }
+
+// SITE SETTINGS (OWNER ONLY)
+export function getSiteSettings(): SiteSettings {
+  const db = getDb();
+  const rows = db.prepare('SELECT key, value FROM site_settings').all() as { key: string; value: string }[];
+  const map: Record<string, string> = {};
+  for (const r of rows) {
+    map[r.key] = r.value;
+  }
+
+  return {
+    website_name: map.website_name || 'Revival Chapel',
+    church_display_name: map.church_display_name || 'Revival Chapel Sanctuary',
+    website_title: map.website_title || 'Revival Chapel - Public Bible & Worship Song Library',
+    website_description: map.website_description || 'Public Bilingual Scripture Preaching, Sacred Worship Hymns, and Church Projector Sanctuary',
+    logo_url: map.logo_url || '/images/revival-chapel-logo.jpg',
+    custom_domain: map.custom_domain || 'revivalchapel.org'
+  };
+}
+
+export function updateSiteSettings(settings: Partial<SiteSettings>): boolean {
+  const db = getDb();
+  const updateStmt = db.prepare(`
+    INSERT INTO site_settings (key, value, updated_at)
+    VALUES (?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+  `);
+
+  const tx = db.transaction(() => {
+    if (settings.website_name !== undefined) updateStmt.run('website_name', settings.website_name);
+    if (settings.church_display_name !== undefined) updateStmt.run('church_display_name', settings.church_display_name);
+    if (settings.website_title !== undefined) updateStmt.run('website_title', settings.website_title);
+    if (settings.website_description !== undefined) updateStmt.run('website_description', settings.website_description);
+    if (settings.logo_url !== undefined) updateStmt.run('logo_url', settings.logo_url);
+    if (settings.custom_domain !== undefined) updateStmt.run('custom_domain', settings.custom_domain);
+  });
+
+  tx();
+  return true;
+}
+
+export function verifyOwnerPasskey(passkey: string): boolean {
+  const db = getDb();
+  const row = db.prepare("SELECT value FROM site_settings WHERE key = 'owner_passkey_hash'").get() as { value: string } | undefined;
+  if (!row || !row.value) {
+    // If not set yet, compare with default
+    return passkey === 'revival2026';
+  }
+  try {
+    return bcrypt.compareSync(passkey, row.value);
+  } catch (e) {
+    return false;
+  }
+}
+
+export function updateOwnerPasskey(newPasskey: string): boolean {
+  const db = getDb();
+  const hash = bcrypt.hashSync(newPasskey, 10);
+  db.prepare(`
+    INSERT INTO site_settings (key, value, updated_at)
+    VALUES ('owner_passkey_hash', ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+  `).run(hash);
+  return true;
+}
+

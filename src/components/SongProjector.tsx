@@ -27,7 +27,7 @@ export default function SongProjector({
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
 
   // Presentation Settings
-  const [languageMode, setLanguageMode] = useState<'both' | 'telugu' | 'english'>('both');
+  const [languageMode, setLanguageMode] = useState<'both' | 'telugu' | 'english' | 'other'>('both');
   const [textSize, setTextSize] = useState<number>(44); // High visibility for sanctuary
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -45,10 +45,12 @@ export default function SongProjector({
 
   const teluguSlides = parseSlides(currentSong?.lyrics_telugu || '');
   const englishSlides = parseSlides(currentSong?.lyrics_english || '');
-  const maxSlides = Math.max(teluguSlides.length, englishSlides.length, 1);
+  const otherSlides = parseSlides(currentSong?.lyrics_other || '');
+  const maxSlides = Math.max(teluguSlides.length, englishSlides.length, otherSlides.length, 1);
 
   const currentTelugu = teluguSlides[currentSlideIndex] || (teluguSlides.length > 0 ? teluguSlides[0] : '');
   const currentEnglish = englishSlides[currentSlideIndex] || (englishSlides.length > 0 ? englishSlides[0] : '');
+  const currentOther = otherSlides[currentSlideIndex] || (otherSlides.length > 0 ? otherSlides[0] : '');
 
   // Auto-hide controls after 3.5s of mouse inactivity
   useEffect(() => {
@@ -198,7 +200,7 @@ export default function SongProjector({
           )}
 
           {/* Divider between bilingual stanzas */}
-          {languageMode === 'both' && currentTelugu && currentEnglish && (
+          {languageMode === 'both' && currentTelugu && (currentEnglish || currentOther) && (
             <div className="w-36 h-0.5 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
           )}
 
@@ -209,6 +211,16 @@ export default function SongProjector({
               className="font-semibold text-slate-100 drop-shadow-xl whitespace-pre-line max-w-5xl"
             >
               {currentEnglish}
+            </div>
+          )}
+
+          {/* Other Language Lyrics */}
+          {(languageMode === 'both' || languageMode === 'other') && currentOther && (
+            <div
+              style={{ fontSize: `${textSize * 0.85}px`, lineHeight: 1.55 }}
+              className="font-semibold text-sky-200 drop-shadow-xl whitespace-pre-line max-w-5xl"
+            >
+              {currentOther}
             </div>
           )}
 
@@ -262,7 +274,7 @@ export default function SongProjector({
             </button>
           </div>
 
-          {/* Language Options: [ Telugu ] [ English ] [ Telugu + English ] */}
+          {/* Language Options */}
           <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800">
             <button
               onClick={() => setLanguageMode('telugu')}
@@ -278,7 +290,7 @@ export default function SongProjector({
                 languageMode === 'both' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Telugu + English
+              {currentSong?.lyrics_other ? 'All' : 'Both'}
             </button>
             <button
               onClick={() => setLanguageMode('english')}
@@ -288,6 +300,16 @@ export default function SongProjector({
             >
               English
             </button>
+            {currentSong?.lyrics_other && (
+              <button
+                onClick={() => setLanguageMode('other')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  languageMode === 'other' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {currentSong?.language || 'Other'}
+              </button>
+            )}
           </div>
 
           {/* Text Size Control */}

@@ -7,6 +7,8 @@ export interface BibleSettings {
   textSize: 'small' | 'medium' | 'large' | 'xlarge';
   fontPercent: number; // e.g. 100%
   layout: 'side-by-side' | 'stacked';
+  columnWidth?: '50-50' | '60-40' | '40-60';
+  textSpacing?: 'normal' | 'relaxed' | 'loose';
   theme: 'light' | 'dark';
   showVerseNumbers: boolean;
   showChapterSummary: boolean;
@@ -159,6 +161,62 @@ export default function BibleSettingsModal({
               >
                 Stacked (TELUGU / ENGLISH)
               </button>
+            </div>
+          </div>
+
+          {/* Column Width: 50/50 / 60/40 / 40/60 */}
+          {settings.layout === 'side-by-side' && (
+            <div className="space-y-2">
+              <label className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider text-xs block">
+                Column Width Ratio (కాలమ్ వెడల్పు)
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { key: '50-50', label: '50% / 50% (Equal)' },
+                  { key: '60-40', label: '60% Telugu / 40% Eng' },
+                  { key: '40-60', label: '40% Telugu / 60% Eng' }
+                ].map(cw => (
+                  <button
+                    key={cw.key}
+                    type="button"
+                    onClick={() => onUpdate({ columnWidth: cw.key as any })}
+                    className={`py-2 px-2 rounded-xl border text-center font-bold text-xs transition-all ${
+                      (settings.columnWidth || '50-50') === cw.key
+                        ? 'border-amber-500 bg-amber-500/15 text-amber-800 dark:text-amber-300 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    {cw.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Text Spacing: Normal / Relaxed / Loose */}
+          <div className="space-y-2">
+            <label className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider text-xs block">
+              Text Line Spacing (వరుసల అంతరం)
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { key: 'normal', label: 'Normal' },
+                { key: 'relaxed', label: 'Relaxed' },
+                { key: 'loose', label: 'Loose' }
+              ].map(sp => (
+                <button
+                  key={sp.key}
+                  type="button"
+                  onClick={() => onUpdate({ textSpacing: sp.key as any })}
+                  className={`py-2 px-2 rounded-xl border text-center font-bold text-xs transition-all ${
+                    (settings.textSpacing || 'relaxed') === sp.key
+                      ? 'border-amber-500 bg-amber-500/15 text-amber-800 dark:text-amber-300 shadow-xs'
+                      : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  {sp.label}
+                </button>
+              ))}
             </div>
           </div>
 

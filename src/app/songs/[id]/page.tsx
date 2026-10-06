@@ -24,9 +24,8 @@ export default function SongDetailPage({ params }: { params: Promise<{ id: strin
   const [isCopied, setIsCopied] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
-  // Requirement 5: Song Language Display Buttons
-  // [ Telugu ] [ English ] [ Telugu + English ]
-  const [languageOption, setLanguageOption] = useState<'telugu' | 'english' | 'both'>('both');
+  // Requirement 5 & 2: Song Language Display Buttons
+  const [languageOption, setLanguageOption] = useState<'telugu' | 'english' | 'other' | 'both'>('both');
   const [layoutMode, setLayoutMode] = useState<'stacked' | 'side-by-side'>('stacked');
 
   // Modals
@@ -226,13 +225,18 @@ ${song.lyrics_english}
         
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 pb-6 border-b border-amber-500/20">
           <div className="space-y-2">
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="font-cinzel text-xs font-black text-amber-600 dark:text-amber-400 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
                 Song #{song.song_number}
               </span>
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 {song.category_name || 'Worship'}
               </span>
+              {song.language && (
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-700 dark:text-sky-300">
+                  {song.language}
+                </span>
+              )}
               {song.bible_reference && (
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 flex items-center space-x-1">
                   <BookOpen className="w-3 h-3" />
@@ -247,9 +251,12 @@ ${song.lyrics_english}
             <p className="text-xl sm:text-2xl font-telugu text-amber-700 dark:text-amber-400 font-semibold">
               {song.title_telugu}
             </p>
-            {song.author && (
-              <p className="text-xs text-slate-400">Written / Composed by: {song.author}</p>
-            )}
+
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 pt-1">
+              {song.author && <span>Written by: <strong className="text-slate-600 dark:text-slate-300">{song.author}</strong></span>}
+              {song.composer && <span>Composer: <strong className="text-slate-600 dark:text-slate-300">{song.composer}</strong></span>}
+              {song.source_origin && <span>Source: <strong className="text-slate-600 dark:text-slate-300">{song.source_origin}</strong></span>}
+            </div>
           </div>
 
           {/* Primary Action Buttons */}
@@ -379,6 +386,19 @@ ${song.lyrics_english}
                 [ English ]
               </button>
 
+              {song.lyrics_other && (
+                <button
+                  onClick={() => setLanguageOption('other')}
+                  className={`px-3.5 py-1.5 rounded-lg font-bold transition-all ${
+                    languageOption === 'other'
+                      ? 'bg-amber-500 text-slate-950 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
+                  }`}
+                >
+                  [ {song.language || 'Other Language'} ]
+                </button>
+              )}
+
               <button
                 onClick={() => setLanguageOption('both')}
                 className={`px-3.5 py-1.5 rounded-lg font-bold transition-all ${
@@ -387,7 +407,7 @@ ${song.lyrics_english}
                     : 'text-slate-600 dark:text-slate-300 hover:text-amber-600'
                 }`}
               >
-                [ Telugu + English ]
+                [ {song.lyrics_other ? 'All Languages' : 'Telugu + English'} ]
               </button>
             </div>
           </div>
@@ -476,41 +496,71 @@ ${song.lyrics_english}
           </div>
         )}
 
-        {/* Scenario 3: Telugu + English (Requirement 5: Display corresponding lyrics together) */}
+        {/* Scenario 3: Other Language Only */}
+        {languageOption === 'other' && song.lyrics_other && (
+          <div className="space-y-4 max-w-3xl mx-auto">
+            <h3 className="font-cinzel text-xs font-bold text-sky-700 dark:text-sky-400 uppercase tracking-widest pb-2 border-b border-sky-500/20">
+              {song.language || 'Other Language'} Lyrics
+            </h3>
+            <div className="text-base sm:text-xl text-slate-900 dark:text-slate-100 whitespace-pre-line leading-relaxed font-normal">
+              {song.lyrics_other}
+            </div>
+          </div>
+        )}
+
+        {/* Scenario 4: All Available Languages (Side-by-side or Stacked) */}
         {languageOption === 'both' && (
           layoutMode === 'side-by-side' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800">
               {/* Telugu Side */}
-              <div className="space-y-4">
-                <h3 className="font-cinzel text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest pb-2 border-b border-amber-500/20 font-telugu">
-                  Telugu Lyrics (తెలుగు సాహిత్యం)
-                </h3>
-                <div className="font-telugu text-base sm:text-lg text-slate-900 dark:text-slate-100 whitespace-pre-line leading-loose">
-                  {song.lyrics_telugu}
+              {song.lyrics_telugu && (
+                <div className="space-y-4">
+                  <h3 className="font-cinzel text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest pb-2 border-b border-amber-500/20 font-telugu">
+                    Telugu Lyrics (తెలుగు సాహిత్యం)
+                  </h3>
+                  <div className="font-telugu text-base sm:text-lg text-slate-900 dark:text-slate-100 whitespace-pre-line leading-loose">
+                    {song.lyrics_telugu}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* English Side */}
-              <div className="pt-6 md:pt-0 md:pl-8 space-y-4">
-                <h3 className="font-cinzel text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest pb-2 border-b border-amber-500/20">
-                  English Lyrics / Translation
-                </h3>
-                <div className="text-sm sm:text-base text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
-                  {song.lyrics_english || 'No English lyrics available.'}
+              {song.lyrics_english && (
+                <div className="pt-6 md:pt-0 md:pl-8 space-y-4">
+                  <h3 className="font-cinzel text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest pb-2 border-b border-amber-500/20">
+                    English Lyrics / Translation
+                  </h3>
+                  <div className="text-sm sm:text-base text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
+                    {song.lyrics_english}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Other Language Side (if available) */}
+              {song.lyrics_other && (
+                <div className="pt-6 lg:pt-0 lg:pl-8 space-y-4">
+                  <h3 className="font-cinzel text-xs font-bold text-sky-700 dark:text-sky-400 uppercase tracking-widest pb-2 border-b border-sky-500/20">
+                    {song.language || 'Other'} Lyrics
+                  </h3>
+                  <div className="text-sm sm:text-base text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
+                    {song.lyrics_other}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            /* Stacked Bilingual (Telugu first, English underneath) */
+            /* Stacked Bilingual / Multi-language */
             <div className="space-y-8 max-w-3xl mx-auto">
-              <div className="space-y-4">
-                <h3 className="font-cinzel text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest pb-2 border-b border-amber-500/20 font-telugu">
-                  Telugu Lyrics (తెలుగు సాహిత్యం)
-                </h3>
-                <div className="font-telugu text-lg sm:text-xl text-slate-900 dark:text-slate-100 whitespace-pre-line leading-loose">
-                  {song.lyrics_telugu}
+              {song.lyrics_telugu && (
+                <div className="space-y-4">
+                  <h3 className="font-cinzel text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest pb-2 border-b border-amber-500/20 font-telugu">
+                    Telugu Lyrics (తెలుగు సాహిత్యం)
+                  </h3>
+                  <div className="font-telugu text-lg sm:text-xl text-slate-900 dark:text-slate-100 whitespace-pre-line leading-loose">
+                    {song.lyrics_telugu}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {song.lyrics_english && (
                 <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
@@ -519,6 +569,17 @@ ${song.lyrics_english}
                   </h3>
                   <div className="text-base text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
                     {song.lyrics_english}
+                  </div>
+                </div>
+              )}
+
+              {song.lyrics_other && (
+                <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+                  <h3 className="font-cinzel text-xs font-bold text-sky-700 dark:text-sky-400 uppercase tracking-widest pb-2 border-b border-sky-500/20">
+                    {song.language || 'Other'} Lyrics
+                  </h3>
+                  <div className="text-base text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
+                    {song.lyrics_other}
                   </div>
                 </div>
               )}

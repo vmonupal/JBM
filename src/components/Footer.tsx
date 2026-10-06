@@ -134,6 +134,14 @@ export default function Footer() {
             <span>Sacred Praise & Worship</span>
             <span>•</span>
             <span>Projector Mode</span>
+            <span>•</span>
+            <Link 
+              href="/owner" 
+              className="text-slate-500 hover:text-amber-400 transition-colors flex items-center space-x-1" 
+              title="Sanctuary Owner Settings"
+            >
+              <span>Owner</span>
+            </Link>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   BookOpen, Music, Search, Tv, Sparkles, Copy, 
   Share2, Check, ArrowRight, Play, Flame, Clock
@@ -11,12 +12,15 @@ import { usePlayer } from '@/components/MusicPlayer';
 import LiveClock from '@/components/LiveClock';
 
 export default function HomePage() {
+  const router = useRouter();
   const { playSong } = usePlayer();
 
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [songs, setSongs] = useState<Song[]>([]);
   const [activeTestament, setActiveTestament] = useState<'NT' | 'OT'>('NT');
   const [copiedVerse, setCopiedVerse] = useState(false);
+  const [bibleSearchQuery, setBibleSearchQuery] = useState('');
+  const [songSearchQuery, setSongSearchQuery] = useState('');
 
   // Daily Bible Verse (Authorized KJV + Public Domain Telugu)
   const dailyVerse = {
@@ -173,6 +177,65 @@ English: ${dailyVerse.englishText}`;
               <span>SEARCH</span>
             </Link>
 
+          </div>
+
+          {/* VISIBLE INSTANT SEARCH BARS (Requirement 19: Instant Bible Search & Song Search) */}
+          <div className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto text-left">
+            {/* Instant Bible Search Bar */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (bibleSearchQuery.trim()) {
+                  router.push(`/bible/search?q=${encodeURIComponent(bibleSearchQuery.trim())}`);
+                }
+              }}
+              className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-amber-500/30 rounded-2xl p-2.5 shadow-md flex items-center gap-2 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all"
+            >
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                value={bibleSearchQuery}
+                onChange={(e) => setBibleSearchQuery(e.target.value)}
+                placeholder="Instant Bible search (e.g. John 3:16, యోహాను 3:16)..."
+                className="w-full bg-transparent border-none text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden"
+              />
+              <button
+                type="submit"
+                className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 shadow-xs cursor-pointer"
+              >
+                Search
+              </button>
+            </form>
+
+            {/* Instant Song Search Bar */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (songSearchQuery.trim()) {
+                  router.push(`/songs?q=${encodeURIComponent(songSearchQuery.trim())}`);
+                }
+              }}
+              className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-sky-500/30 rounded-2xl p-2.5 shadow-md flex items-center gap-2 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all"
+            >
+              <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 shrink-0">
+                <Music className="w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                value={songSearchQuery}
+                onChange={(e) => setSongSearchQuery(e.target.value)}
+                placeholder="Instant Song search (title, lyrics, number, author)..."
+                className="w-full bg-transparent border-none text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden"
+              />
+              <button
+                type="submit"
+                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-amber-300 rounded-xl text-xs font-bold transition-all shrink-0 shadow-xs cursor-pointer"
+              >
+                Search
+              </button>
+            </form>
           </div>
 
         </div>

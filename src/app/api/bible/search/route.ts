@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { searchBible } from '@/lib/db';
+import { searchBibleUniversal, parseBibleReference } from '@/lib/bible-search';
 
 export async function GET(request: Request) {
   try {
@@ -8,11 +8,11 @@ export async function GET(request: Request) {
     const limit = searchParams.get('limit') ? Number(searchParams.get('limit')) : 50;
 
     if (!query || !query.trim()) {
-      return NextResponse.json([]);
+      return NextResponse.json({ reference: null, verses: [] });
     }
 
-    const results = searchBible(query, limit);
-    return NextResponse.json(results);
+    const data = searchBibleUniversal(query, limit);
+    return NextResponse.json(data);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

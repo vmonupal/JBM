@@ -54,6 +54,14 @@ export default function SongsPage() {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('q');
+      if (q) setSearchQuery(q);
+    }
+  }, []);
+
+  useEffect(() => {
     loadData();
   }, [selectedCategory, searchQuery]);
 
@@ -137,21 +145,21 @@ export default function SongsPage() {
         </div>
       )}
 
-      {/* Search and Category Filter Toolbar (Requirement 8 & 9) */}
+      {/* Search and Category Filter Toolbar (Requirement 4 & 9) */}
       <div className="bg-white dark:bg-slate-900 border border-amber-500/20 rounded-3xl p-5 shadow-xs space-y-4">
-        {/* Search Input: English, Telugu, Lyrics, Song #, Category, Author */}
+        {/* Search Input across entire song database */}
         <div className="relative">
           <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by Telugu title (యెహోవా), English title, song number (#101), author, lyrics, or category..."
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 font-telugu"
+            placeholder="Search songs by title, lyrics, number, language, category or author..."
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 font-sans"
           />
         </div>
 
-        {/* Category Filter Pills (Requirement 9) */}
+        {/* Category Filter Pills */}
         <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
           <button
             onClick={() => setSelectedCategory(null)}
@@ -206,12 +214,19 @@ export default function SongsPage() {
               className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 hover:border-amber-500/50 hover:shadow-lg transition-all flex flex-col justify-between group"
             >
               <div>
-                {/* Top: Song Number & Category */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-cinzel text-xs font-black text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                    Song #{song.song_number}
-                  </span>
-                  <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">
+                {/* Top: Song Number, Category & Language Badge */}
+                <div className="flex items-center justify-between mb-3 gap-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-cinzel text-xs font-black text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                      Song #{song.song_number}
+                    </span>
+                    {song.language && (
+                      <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20">
+                        {song.language}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0">
                     {song.category_name || 'Worship'}
                   </span>
                 </div>
@@ -226,12 +241,12 @@ export default function SongsPage() {
                   </p>
                 </Link>
 
-                {/* Author or Bible Ref */}
-                {(song.author || song.bible_reference) && (
+                {/* Author / Composer / Bible Ref */}
+                {(song.author || song.composer || song.bible_reference) && (
                   <p className="text-[11px] text-slate-400 mt-1.5 line-clamp-1">
                     {song.author && `By ${song.author}`}
-                    {song.author && song.bible_reference && ' • '}
-                    {song.bible_reference && `Ref: ${song.bible_reference}`}
+                    {song.composer && ` • Comp: ${song.composer}`}
+                    {song.bible_reference && ` • Ref: ${song.bible_reference}`}
                   </p>
                 )}
 
