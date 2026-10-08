@@ -87,52 +87,13 @@ export default function BibleProjector({
     };
   }, []);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      setShowControls(true);
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        e.preventDefault();
-        handleNextVerse();
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        handlePrevVerse();
-      } else if (e.key === 'PageDown' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        handleNextChapter();
-      } else if (e.key === 'PageUp' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        handlePrevChapter();
-      } else if (e.key.toLowerCase() === 'f') {
-        toggleFullscreen();
-      } else if (e.key.toLowerCase() === 'c') {
-        setShowClock(prev => !prev);
-      } else if (e.key === 'Escape') {
-        if (!document.fullscreenElement) {
-          router.push(`/bible?bookId=${selectedBookId}&chapter=${selectedChapter}`);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  });
-
-  const handleNextVerse = () => {
-    if (verses.length === 0) return;
-    if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(currentVerseIndex + 1);
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
     } else {
-      handleNextChapter();
-    }
-  };
-
-  const handlePrevVerse = () => {
-    if (verses.length === 0) return;
-    if (currentVerseIndex > 0) {
-      setCurrentVerseIndex(currentVerseIndex - 1);
-    } else {
-      handlePrevChapter();
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
     }
   };
 
@@ -165,15 +126,54 @@ export default function BibleProjector({
     }
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
+  const handleNextVerse = () => {
+    if (verses.length === 0) return;
+    if (currentVerseIndex < verses.length - 1) {
+      setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
-      document.exitFullscreen().catch(() => {});
-      setIsFullscreen(false);
+      handleNextChapter();
     }
   };
+
+  const handlePrevVerse = () => {
+    if (verses.length === 0) return;
+    if (currentVerseIndex > 0) {
+      setCurrentVerseIndex(currentVerseIndex - 1);
+    } else {
+      handlePrevChapter();
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      setShowControls(true);
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        handleNextVerse();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrevVerse();
+      } else if (e.key === 'PageDown' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        handleNextChapter();
+      } else if (e.key === 'PageUp' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        handlePrevChapter();
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullscreen();
+      } else if (e.key.toLowerCase() === 'c') {
+        setShowClock(prev => !prev);
+      } else if (e.key === 'Escape') {
+        if (!document.fullscreenElement) {
+          router.push(`/bible?bookId=${selectedBookId}&chapter=${selectedChapter}`);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
 
   return (
     <div className="fixed inset-0 z-50 bg-[#030712] text-slate-100 flex flex-col justify-between select-none overflow-hidden font-sans">

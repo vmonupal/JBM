@@ -69,6 +69,44 @@ export default function SongProjector({
     };
   }, []);
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+    }
+  };
+
+  const handleNextSong = () => {
+    if (currentSongIndex < songs.length - 1) {
+      setCurrentSongIndex(currentSongIndex + 1);
+      setCurrentSlideIndex(0);
+    }
+  };
+
+  const handlePrevSong = () => {
+    if (currentSongIndex > 0) {
+      setCurrentSongIndex(currentSongIndex - 1);
+      setCurrentSlideIndex(0);
+    }
+  };
+
+  const handleNextSlide = () => {
+    if (currentSlideIndex < maxSlides - 1) {
+      setCurrentSlideIndex(currentSlideIndex + 1);
+    } else {
+      handleNextSong();
+    }
+  };
+
+  const handlePrevSlide = () => {
+    if (currentSlideIndex > 0) {
+      setCurrentSlideIndex(currentSlideIndex - 1);
+    }
+  };
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -99,44 +137,6 @@ export default function SongProjector({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
-
-  const handleNextSlide = () => {
-    if (currentSlideIndex < maxSlides - 1) {
-      setCurrentSlideIndex(currentSlideIndex + 1);
-    } else {
-      handleNextSong();
-    }
-  };
-
-  const handlePrevSlide = () => {
-    if (currentSlideIndex > 0) {
-      setCurrentSlideIndex(currentSlideIndex - 1);
-    }
-  };
-
-  const handleNextSong = () => {
-    if (currentSongIndex < songs.length - 1) {
-      setCurrentSongIndex(currentSongIndex + 1);
-      setCurrentSlideIndex(0);
-    }
-  };
-
-  const handlePrevSong = () => {
-    if (currentSongIndex > 0) {
-      setCurrentSongIndex(currentSongIndex - 1);
-      setCurrentSlideIndex(0);
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen().catch(() => {});
-      setIsFullscreen(false);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-[#030712] text-slate-100 flex flex-col justify-between select-none overflow-hidden font-sans">

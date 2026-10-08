@@ -24,17 +24,6 @@ export default function BibleSearchPage() {
     { label: 'యోహాను 3:16', q: 'యోహాను 3:16' }
   ];
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const q = params.get('q');
-      if (q) {
-        setQuery(q);
-        handleSearch(q);
-      }
-    }
-  }, []);
-
   const handleSearch = async (searchTerm = query) => {
     if (!searchTerm || !searchTerm.trim()) return;
     setLoading(true);
@@ -53,13 +42,24 @@ export default function BibleSearchPage() {
         setResults([]);
         setReferenceMatch(null);
       }
-    } catch (e) {
+    } catch {
       setResults([]);
       setReferenceMatch(null);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('q');
+      if (q) {
+        setQuery(q);
+        handleSearch(q);
+      }
+    }
+  }, []);
 
   const handleCopy = (verse: BibleVerse) => {
     const text = `${verse.book_english} ${verse.chapter_number}:${verse.verse_number} (${verse.book_telugu})
