@@ -7,6 +7,7 @@ import {
   Search, ShieldAlert, CheckCircle2 
 } from 'lucide-react';
 import { BibleBook, BibleVerse } from '@/lib/types';
+import BibleIntegrityStatus from '@/components/BibleIntegrityStatus';
 
 export default function AdminBiblePage() {
   const [books, setBooks] = useState<BibleBook[]>([]);
@@ -132,6 +133,9 @@ export default function AdminBiblePage() {
           </div>
         )}
       </div>
+
+      {/* Bible Data Integrity Report & Validator (Requirement 3) */}
+      <BibleIntegrityStatus />
 
       {/* Book & Chapter Selector Bar */}
       <div className="bg-white dark:bg-slate-900 border border-amber-500/20 rounded-2xl p-4 flex flex-wrap items-center gap-4">

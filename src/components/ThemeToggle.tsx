@@ -1,32 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { useSettings } from '@/context/SettingsContext';
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('rci_theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (saved === 'dark' || (!saved && prefersDark)) {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDark(false);
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
+  const { settings, updateSection } = useSettings();
+  const isDark = settings.appearance.theme === 'dark' || 
+    (settings.appearance.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const toggle = () => {
     if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('rci_theme', 'light');
-      setIsDark(false);
+      updateSection('appearance', { theme: 'light' });
     } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('rci_theme', 'dark');
-      setIsDark(true);
+      updateSection('appearance', { theme: 'dark' });
     }
   };
 

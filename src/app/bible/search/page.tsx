@@ -2,17 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, BookOpen, Tv, ArrowRight, Sparkles, Check, Copy, Compass } from 'lucide-react';
+import { Search, BookOpen, Tv, ArrowRight, Sparkles, Check, Copy, Compass, Settings as SettingsIcon } from 'lucide-react';
 import { BibleVerse } from '@/lib/types';
 import { ParsedBibleReference } from '@/lib/bible-reference-parser';
+import { useSettings } from '@/context/SettingsContext';
 
 export default function BibleSearchPage() {
+  const { settings, openSettings } = useSettings();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<BibleVerse[]>([]);
   const [referenceMatch, setReferenceMatch] = useState<ParsedBibleReference | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  const searchSettings = settings.bibleSearch;
+  const limit = searchSettings.resultsPerPage || 50;
 
   const searchExamples = [
     { label: 'John 3:16', q: 'John 3:16' },
@@ -30,7 +35,7 @@ export default function BibleSearchPage() {
     setHasSearched(true);
 
     try {
-      const res = await fetch(`/api/bible/search?q=${encodeURIComponent(searchTerm.trim())}`);
+      const res = await fetch(`/api/bible/search?q=${encodeURIComponent(searchTerm.trim())}&limit=${limit}`);
       const data = await res.json();
       if (data && typeof data === 'object') {
         setReferenceMatch(data.reference || null);
@@ -68,10 +73,23 @@ Telugu: ${verse.telugu_text}
 
 English: ${verse.english_text}
 
-— Revival Chapel`;
+— JBM`;
     navigator.clipboard.writeText(text);
     setCopiedId(verse.id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // Helper to highlight searched word in text
+  const renderHighlightedText = (text: string, term: string) => {
+    if (!searchSettings.highlightWord || !term || !term.trim()) return text;
+    const parts = text.split(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+    return parts.map((part, i) => 
+      part.toLowerCase() === term.toLowerCase() ? (
+        <mark key={i} className="bg-amber-300 dark:bg-amber-600 text-slate-950 font-bold px-0.5 rounded">
+          {part}
+        </mark>
+      ) : part
+    );
   };
 
   return (
@@ -105,13 +123,23 @@ English: ${verse.english_text}
             placeholder="🔍 Search Bible — Book, Chapter, Verse, or Word"
             className="w-full pl-12 pr-28 py-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm sm:text-base rounded-2xl border-2 border-amber-500/40 hover:border-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-500/20 transition-all font-sans"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="absolute right-2.5 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition-all hover:scale-105 disabled:opacity-50"
-          >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
+          <div className="absolute right-2.5 flex items-center space-x-1.5">
+            <button
+              type="button"
+              onClick={() => openSettings('bibleSearch')}
+              title="Search Settings"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-amber-600"
+            >
+              <SettingsIcon className="w-4 h-4 text-amber-500" />
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition-all hover:scale-105 disabled:opacity-50"
+            >
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
         </form>
 
         {/* Examples inside / under search box (Requirement 7) */}
@@ -213,10 +241,14 @@ English: ${verse.english_text}
                     className="flex items-center space-x-2 group-hover:text-amber-600 transition-colors"
                   >
                     <span className="font-cinzel font-black text-amber-700 dark:text-amber-400 text-base">
-                      {verse.book_english} {verse.chapter_number}:{verse.verse_number}
+                      {searchSettings.showBookName && verse.book_english}{' '}
+                      {searchSettings.showChapter && verse.chapter_number}
+                      {searchSettings.showVerseNumber && `:${verse.verse_number}`}
                     </span>
                     <span className="font-telugu text-sm text-slate-500 font-semibold">
-                      ({verse.book_telugu} {verse.chapter_number}:{verse.verse_number})
+                      ({searchSettings.showBookName && verse.book_telugu}{' '}
+                      {searchSettings.showChapter && verse.chapter_number}
+                      {searchSettings.showVerseNumber && `:${verse.verse_number}`})
                     </span>
                   </Link>
 
@@ -240,12 +272,16 @@ English: ${verse.english_text}
 
                 {/* Parallel Verse Text */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <p className="font-telugu text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
-                    {verse.telugu_text}
-                  </p>
-                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                    {verse.english_text}
-                  </p>
+                  {searchSettings.searchTelugu && (
+                    <p className="font-telugu text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                      {renderHighlightedText(verse.telugu_text, query)}
+                    </p>
+                  )}
+                  {searchSettings.searchEnglish && (
+                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                      {renderHighlightedText(verse.english_text, query)}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

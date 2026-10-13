@@ -56,12 +56,12 @@ console.log('Verified site_settings table');
 
 // Insert default site settings if not present
 const defaultSettings = [
-  { key: 'website_name', value: 'Revival Chapel' },
-  { key: 'church_display_name', value: 'Revival Chapel Sanctuary' },
-  { key: 'website_title', value: 'Revival Chapel - Public Bible & Worship Song Library' },
-  { key: 'website_description', value: 'Public Bilingual Scripture Preaching, Sacred Worship Hymns, and Church Projector Sanctuary' },
-  { key: 'logo_url', value: '/images/revival-chapel-logo.jpg' },
-  { key: 'custom_domain', value: 'revivalchapel.org' },
+  { key: 'website_name', value: 'JBM' },
+  { key: 'church_display_name', value: 'JBM' },
+  { key: 'website_title', value: 'JBM' },
+  { key: 'website_description', value: 'JBM - Holy Bible in Telugu and English, sacred worship hymns, church posters, and live sanctuary presentation projector mode.' },
+  { key: 'logo_url', value: '' },
+  { key: 'custom_domain', value: 'jbm.org' },
   { key: 'owner_passkey_hash', value: bcrypt.hashSync('revival2026', 10) }
 ];
 

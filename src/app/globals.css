@@ -97,3 +97,66 @@ body {
   background-image: radial-gradient(rgba(212, 175, 55, 0.08) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+/* =========================================================================
+   ACCESSIBILITY MODES (Requirement 18 & 23)
+   ========================================================================= */
+
+/* 1. High Contrast Mode */
+.rci-high-contrast {
+  --background: #000000 !important;
+  --foreground: #ffffff !important;
+  --card-bg: #000000 !important;
+  --card-border: #f59e0b !important;
+}
+
+.rci-high-contrast.dark,
+.rci-high-contrast:not(.dark) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.rci-high-contrast button,
+.rci-high-contrast a,
+.rci-high-contrast input,
+.rci-high-contrast select,
+.rci-high-contrast textarea {
+  border-width: 2px !important;
+}
+
+/* 2. Reduced Motion Mode */
+.rci-reduced-motion *,
+.rci-reduced-motion *::before,
+.rci-reduced-motion *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+  scroll-behavior: auto !important;
+}
+
+/* 3. Larger Buttons Mode */
+.rci-large-buttons button,
+.rci-large-buttons a[role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  font-size: 1rem !important;
+}
+
+/* 4. High Visibility Focus Indicators */
+.rci-focus-indicators *:focus-visible {
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* 5. Easy Reading Mode */
+.rci-easy-reading {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+  letter-spacing: 0.015em;
+}
+
+.rci-easy-reading .font-telugu {
+  line-height: 2.1 !important;
+}

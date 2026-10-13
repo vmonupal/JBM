@@ -1,4 +1,4 @@
-import { getDb } from './db';
+import { getVerse, searchBible } from './db';
 import { BibleVerse } from './types';
 import { parseBibleReference as parseRawRef, type ParsedBibleReference } from './bible-reference-parser';
 
@@ -10,13 +10,7 @@ export function parseBibleReference(rawInput: string): ParsedBibleReference | nu
   if (!parsed) return null;
 
   if (parsed.verse) {
-    const db = getDb();
-    const exactVerse = db.prepare(`
-      SELECT v.*, b.name_english as book_english, b.name_telugu as book_telugu
-      FROM bible_verses v
-      JOIN bible_books b ON b.id = v.book_id
-      WHERE v.book_id = ? AND v.chapter_number = ? AND v.verse_number = ?
-    `).get(parsed.bookId, parsed.chapter, parsed.verse) as BibleVerse | undefined;
+    const exactVerse = getVerse(parsed.bookId, parsed.chapter, parsed.verse);
     parsed.exactVerse = exactVerse;
   }
 
@@ -36,22 +30,11 @@ export function searchBibleUniversal(rawQuery: string, limit = 50): {
   const parsedRef = parseBibleReference(query);
 
   // 2. Perform full database word/phrase search across all 66 books (31,102 verses)
-  const db = getDb();
-  const pattern = `%${query}%`;
-  const verses = db.prepare(`
-    SELECT v.*, b.name_english as book_english, b.name_telugu as book_telugu
-    FROM bible_verses v
-    JOIN bible_books b ON b.id = v.book_id
-    WHERE v.telugu_text LIKE ? 
-       OR v.english_text LIKE ?
-       OR b.name_english LIKE ?
-       OR b.name_telugu LIKE ?
-    ORDER BY b.book_order ASC, v.chapter_number ASC, v.verse_number ASC
-    LIMIT ?
-  `).all(pattern, pattern, pattern, pattern, limit) as BibleVerse[];
+  const verses = searchBible(query, limit);
 
   return {
     reference: parsedRef,
     verses
   };
 }
+

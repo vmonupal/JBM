@@ -1,9 +1,12 @@
 'use client';
 
-import Link from 'next/link';
-import { BookOpen, Heart, Shield, Sparkles, Clock, MapPin, Users, Flame } from 'lucide-react';
+import { BookOpen, Sparkles, Users, Flame } from 'lucide-react';
+import { useBranding } from '@/context/BrandingContext';
+import JbmBrandLogo from '@/components/JbmBrandLogo';
 
 export default function AboutPage() {
+  const { branding } = useBranding();
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       
@@ -11,7 +14,7 @@ export default function AboutPage() {
       <div className="text-center space-y-3">
         <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>About Revival Chapel</span>
+          <span>About JBM</span>
         </span>
         <h1 className="font-cinzel text-3xl sm:text-5xl font-black text-slate-900 dark:text-amber-100">
           Our Vision, Faith & Mission
@@ -26,22 +29,18 @@ export default function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-4">
             <h2 className="font-cinzel text-2xl sm:text-3xl font-bold text-amber-300">
-              Welcome to Our Fellowship
+              Welcome to JBM
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Revival Chapel was founded on the biblical call to spiritual awakening, prayer, and deep reverence for the Word of God. Our congregation welcomes families, youth, and seekers from every walk of life to grow in grace and truth.
+              JBM is founded on the biblical call to spiritual awakening, prayer, and deep reverence for the Word of God. Our congregation welcomes families, youth, and seekers from every walk of life to grow in grace and truth.
             </p>
             <p className="text-xs sm:text-sm text-slate-300 font-telugu leading-relaxed">
               దేవుని వాక్యమునకు కట్టుబడి, పరిశుద్ధాత్మ శక్తితో నింపబడి, ప్రభువైన యేసుక్రీస్తు సువార్తను ప్రకటించుటకు మేము సమర్పించుకున్నాము.
             </p>
           </div>
           <div className="flex justify-center">
-            <div className="bg-white p-3 rounded-2xl shadow-2xl border border-amber-500/30">
-              <img
-                src="/images/revival-chapel-logo.jpg"
-                alt="Revival Chapel Official Logo"
-                className="h-28 sm:h-36 w-auto object-contain"
-              />
+            <div className="p-3 rounded-2xl shadow-2xl border border-amber-500/30 bg-slate-900/90">
+              <JbmBrandLogo variant="hero" showSubtitle={true} />
             </div>
           </div>
         </div>

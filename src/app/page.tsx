@@ -5,18 +5,22 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   BookOpen, Music, Search, Tv, Sparkles, Copy, 
-  Share2, Check, ArrowRight, Play, Flame, Clock
+  Share2, Check, ArrowRight, Play, Flame, Clock, Image as ImageIcon, Plus
 } from 'lucide-react';
-import { BibleBook, Song } from '@/lib/types';
+import { BibleBook, Song, Poster } from '@/lib/types';
 import { usePlayer } from '@/components/MusicPlayer';
+import { useBranding } from '@/context/BrandingContext';
+import JbmBrandLogo from '@/components/JbmBrandLogo';
 import LiveClock from '@/components/LiveClock';
 
 export default function HomePage() {
   const router = useRouter();
   const { playSong } = usePlayer();
+  const { branding } = useBranding();
 
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [songs, setSongs] = useState<Song[]>([]);
+  const [posters, setPosters] = useState<Poster[]>([]);
   const [activeTestament, setActiveTestament] = useState<'NT' | 'OT'>('NT');
   const [copiedVerse, setCopiedVerse] = useState(false);
   const [bibleSearchQuery, setBibleSearchQuery] = useState('');
@@ -45,6 +49,12 @@ export default function HomePage() {
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setSongs(data); })
       .catch(() => {});
+
+    // Fetch posters
+    fetch('/api/posters')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setPosters(data); })
+      .catch(() => {});
   }, []);
 
   const handleCopyVerse = () => {
@@ -54,7 +64,7 @@ Telugu: ${dailyVerse.teluguText}
 
 English: ${dailyVerse.englishText}
 
-— Revival Chapel`;
+— ${branding.website_name || 'JBM'}`;
     navigator.clipboard.writeText(text);
     setCopiedVerse(true);
     setTimeout(() => setCopiedVerse(false), 2000);
@@ -85,42 +95,36 @@ English: ${dailyVerse.englishText}`;
   return (
     <div className="space-y-16 sm:space-y-20 pb-20">
       
-      {/* 1. HERO SECTION (Requirement 18: Logo, Welcome, 5 Action Buttons) */}
+      {/* 1. HERO SECTION (JBM Visual Identity & Quick Actions) */}
       <section className="relative overflow-hidden bg-gradient-to-b from-amber-500/10 via-sky-900/5 to-transparent pt-10 sm:pt-16 pb-14 border-b border-amber-500/15">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           
-          {/* REVIVAL CHAPEL LOGO (Requirement 16 & 18) */}
+          {/* JBM OFFICIAL LOGO / WORDMARK BADGE */}
           <div className="flex justify-center">
-            <div className="p-2 bg-white rounded-2xl border-2 border-amber-500/40 shadow-xl inline-block hover:scale-105 transition-transform">
-              <img
-                src="/images/revival-chapel-logo.jpg"
-                alt="Revival Chapel Official Logo"
-                className="h-24 sm:h-28 w-auto object-contain rounded-xl"
-              />
-            </div>
+            <JbmBrandLogo variant="hero" showSubtitle={false} />
           </div>
 
           {/* Welcome Text */}
           <div className="space-y-2">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>Public Bible & Church Song Library</span>
+              <span>Bilingual Holy Bible & Worship Songs</span>
             </div>
             
             <h1 className="font-cinzel text-4xl sm:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              Welcome to Revival Chapel
+              Welcome to JBM
             </h1>
             
             <p className="font-telugu text-amber-700 dark:text-amber-400 font-semibold text-lg sm:text-xl">
-              జీవపు పునరుజ్జీవ మందిరం • పరిశుద్ధ గ్రంథము & కీర్తనల గ్రంథాలయం
+              పరిశుద్ధ గ్రంథము & కీర్తనల గ్రంథాలయం
             </p>
 
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-              Read God's Word in Telugu and English, worship through church hymns, and project lyrics and scriptures on church displays. Open to everyone with no account required.
+              Read God's Word in Telugu and English, worship through church hymns, explore Church posters, and project lyrics and scriptures on sanctuary displays. Open to everyone with no account required.
             </p>
           </div>
 
-          {/* Live Date and Time Badge (Requirement 17) */}
+          {/* Live Date and Time Badge */}
           <div className="flex items-center justify-center">
             <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs text-xs text-slate-700 dark:text-slate-300">
               <Clock className="w-3.5 h-3.5 text-amber-500" />
@@ -128,8 +132,8 @@ English: ${dailyVerse.englishText}`;
             </div>
           </div>
 
-          {/* MANDATED 5 ACTION BUTTONS (Requirement 18):
-              [ BIBLE ] [ SONGS ] [ BIBLE PROJECTOR ] [ SONG PROJECTOR ] [ SEARCH ] */}
+          {/* CORE ACTION BUTTONS:
+              [ BIBLE ] [ SONGS ] [ POSTERS ] [ BIBLE PROJECTOR ] [ SONG PROJECTOR ] [ SEARCH ] */}
           <div className="pt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             
             {/* [ BIBLE ] */}
@@ -148,6 +152,15 @@ English: ${dailyVerse.englishText}`;
             >
               <Music className="w-5 h-5 text-amber-500" />
               <span>SONGS</span>
+            </Link>
+
+            {/* [ POSTERS ] */}
+            <Link
+              href="/posters"
+              className="px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm sm:text-base rounded-2xl shadow-md hover:shadow-lg hover:scale-105 transition-all flex items-center space-x-2"
+            >
+              <ImageIcon className="w-5 h-5" />
+              <span>POSTERS</span>
             </Link>
 
             {/* [ BIBLE PROJECTOR ] */}
@@ -481,6 +494,79 @@ English: ${dailyVerse.englishText}`;
                 </div>
               </div>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CHURCH POSTERS SHOWCASE SECTION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+          <div>
+            <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
+              <ImageIcon className="w-4 h-4" />
+              <span>Church Events & Media</span>
+            </div>
+            <h2 className="font-cinzel text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">
+              Church Posters (ప్రకటనలు & పోస్టర్లు)
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Upcoming sanctuary services, fasting prayers, youth rallies, and ministry celebrations.
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/posters"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold hover:bg-emerald-500/20 transition-all"
+            >
+              <span>View All Posters ({posters.length})</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {posters.slice(0, 4).map((p) => (
+            <Link
+              key={p.id}
+              href={`/posters?id=${p.id}`}
+              className="group bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl overflow-hidden hover:border-emerald-500/50 hover:shadow-xl transition-all flex flex-col"
+            >
+              <div className="relative aspect-[3/4] bg-slate-950 overflow-hidden">
+                <img
+                  src={p.image_url}
+                  alt={p.title || 'Church Poster'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-950/80 text-emerald-300 backdrop-blur-xs border border-emerald-500/30">
+                    {p.category}
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    {p.title || p.event_name || 'Church Event'}
+                  </h3>
+                  {p.event_date && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-1 flex items-center space-x-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{p.event_date} {p.event_time ? `• ${p.event_time}` : ''}</span>
+                    </p>
+                  )}
+                  {p.description && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
+                      {p.description}
+                    </p>
+                  )}
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                  <span>View Poster</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
       </section>

@@ -1,9 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { MapPin, Phone, Mail, Clock, Tv, Music, BookOpen } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Tv, Music, BookOpen, Image as ImageIcon } from 'lucide-react';
+import { useBranding } from '@/context/BrandingContext';
+import JbmBrandLogo from './JbmBrandLogo';
 
 export default function Footer() {
+  const { branding } = useBranding();
+  const websiteName = 'JBM';
+  const churchName = 'JBM';
+
   return (
     <footer className="bg-slate-950 text-slate-300 border-t border-amber-500/20 pt-16 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,21 +17,7 @@ export default function Footer() {
           
           {/* Column 1: Church Info & Logo */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="bg-white p-1 rounded-lg border border-amber-500/30">
-                <img
-                  src="/images/revival-chapel-logo.jpg"
-                  alt="Revival Chapel Official Logo"
-                  className="h-12 w-auto object-contain rounded"
-                />
-              </div>
-              <div>
-                <h3 className="font-cinzel font-bold text-lg text-amber-200 tracking-wider">
-                  REVIVAL CHAPEL
-                </h3>
-                <p className="text-xs text-amber-400 font-medium">Public Bible & Hymn Library</p>
-              </div>
-            </div>
+            <JbmBrandLogo variant="footer" showSubtitle={true} />
             <p className="text-xs text-slate-400 leading-relaxed">
               "For where two or three are gathered together in my name, there am I in the midst of them." — Matthew 18:20
             </p>
@@ -87,6 +79,10 @@ export default function Footer() {
                 <Tv className="w-3 h-3" />
                 <span>Song Projector</span>
               </Link>
+              <Link href="/posters" className="text-amber-400 font-semibold hover:text-amber-300 transition-colors flex items-center space-x-1">
+                <ImageIcon className="w-3 h-3" />
+                <span>Church Posters</span>
+              </Link>
               <Link href="/bible/search" className="text-slate-400 hover:text-amber-300 transition-colors">
                 Search Bible
               </Link>
@@ -107,7 +103,7 @@ export default function Footer() {
             <div className="space-y-2.5 text-xs text-slate-400">
               <div className="flex items-start space-x-2">
                 <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <span>Revival Chapel Sanctuary, Church Street, Fellowship Hall</span>
+                <span>{churchName}, Fellowship Hall & Sanctuary</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-amber-400 shrink-0" />
@@ -115,7 +111,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>info@revivalchapel.org</span>
+                <span>contact@{branding.custom_domain || 'jbm.org'}</span>
               </div>
               <p className="text-[11px] text-slate-500 pt-1">
                 Open to all believers, visitors, and families without registration.
@@ -127,7 +123,7 @@ export default function Footer() {
 
         {/* Bottom copyright */}
         <div className="mt-12 pt-6 border-t border-slate-800 text-center flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Revival Chapel. Dedicated to the glory of God and the uplifting of His church.</p>
+          <p>© {new Date().getFullYear()} {websiteName}. Dedicated to the glory of God and the uplifting of His church.</p>
           <div className="flex items-center space-x-4">
             <span>Telugu & English Scripture Study</span>
             <span>•</span>

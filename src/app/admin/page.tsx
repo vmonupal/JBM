@@ -7,6 +7,7 @@ import {
   Trash2, Edit3, Check, CheckCircle2, ArrowRight, BarChart3, Globe
 } from 'lucide-react';
 import { AdminStats } from '@/lib/types';
+import BibleIntegrityStatus from '@/components/BibleIntegrityStatus';
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -34,7 +35,7 @@ export default function AdminDashboardPage() {
             </span>
           </div>
           <h1 className="font-cinzel text-3xl sm:text-4xl font-black text-slate-900 dark:text-amber-100">
-            Revival Chapel CMS & Control Center
+            JBM CMS & Control Center
           </h1>
           <p className="text-xs text-slate-500 mt-1">
             Easily add, edit, or curate Bible scriptures, Telugu-English worship hymns, and categories.
@@ -105,6 +106,9 @@ export default function AdminDashboardPage() {
           <p className="text-[11px] text-slate-500">Curated Themes</p>
         </div>
       </div>
+
+      {/* Bible Data Status & Integrity Verification Report (Requirement 3) */}
+      <BibleIntegrityStatus />
 
       {/* Admin Modules Quick Launch */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -1,0 +1,530 @@
+[
+  {
+    "id": 1,
+    "name_english": "Genesis",
+    "name_telugu": "ఆదికాండము",
+    "testament": "OT",
+    "total_chapters": 50,
+    "book_order": 1
+  },
+  {
+    "id": 2,
+    "name_english": "Exodus",
+    "name_telugu": "నిర్గమకాండము",
+    "testament": "OT",
+    "total_chapters": 40,
+    "book_order": 2
+  },
+  {
+    "id": 3,
+    "name_english": "Leviticus",
+    "name_telugu": "లేవీయకాండము",
+    "testament": "OT",
+    "total_chapters": 27,
+    "book_order": 3
+  },
+  {
+    "id": 4,
+    "name_english": "Numbers",
+    "name_telugu": "సంఖ్యాకాండము",
+    "testament": "OT",
+    "total_chapters": 36,
+    "book_order": 4
+  },
+  {
+    "id": 5,
+    "name_english": "Deuteronomy",
+    "name_telugu": "ద్వితీయోపదేశకాండము",
+    "testament": "OT",
+    "total_chapters": 34,
+    "book_order": 5
+  },
+  {
+    "id": 6,
+    "name_english": "Joshua",
+    "name_telugu": "యెహోషువ",
+    "testament": "OT",
+    "total_chapters": 24,
+    "book_order": 6
+  },
+  {
+    "id": 7,
+    "name_english": "Judges",
+    "name_telugu": "న్యాయాధిపతులు",
+    "testament": "OT",
+    "total_chapters": 21,
+    "book_order": 7
+  },
+  {
+    "id": 8,
+    "name_english": "Ruth",
+    "name_telugu": "రూతు",
+    "testament": "OT",
+    "total_chapters": 4,
+    "book_order": 8
+  },
+  {
+    "id": 9,
+    "name_english": "1 Samuel",
+    "name_telugu": "1 సమూయేలు",
+    "testament": "OT",
+    "total_chapters": 31,
+    "book_order": 9
+  },
+  {
+    "id": 10,
+    "name_english": "2 Samuel",
+    "name_telugu": "2 సమూయేలు",
+    "testament": "OT",
+    "total_chapters": 24,
+    "book_order": 10
+  },
+  {
+    "id": 11,
+    "name_english": "1 Kings",
+    "name_telugu": "1 రాజులు",
+    "testament": "OT",
+    "total_chapters": 22,
+    "book_order": 11
+  },
+  {
+    "id": 12,
+    "name_english": "2 Kings",
+    "name_telugu": "2 రాజులు",
+    "testament": "OT",
+    "total_chapters": 25,
+    "book_order": 12
+  },
+  {
+    "id": 13,
+    "name_english": "1 Chronicles",
+    "name_telugu": "1 దినవృత్తాంతములు",
+    "testament": "OT",
+    "total_chapters": 29,
+    "book_order": 13
+  },
+  {
+    "id": 14,
+    "name_english": "2 Chronicles",
+    "name_telugu": "2 దినవృత్తాంతములు",
+    "testament": "OT",
+    "total_chapters": 36,
+    "book_order": 14
+  },
+  {
+    "id": 15,
+    "name_english": "Ezra",
+    "name_telugu": "ఎజ్రా",
+    "testament": "OT",
+    "total_chapters": 10,
+    "book_order": 15
+  },
+  {
+    "id": 16,
+    "name_english": "Nehemiah",
+    "name_telugu": "నెహెమ్యా",
+    "testament": "OT",
+    "total_chapters": 13,
+    "book_order": 16
+  },
+  {
+    "id": 17,
+    "name_english": "Esther",
+    "name_telugu": "ఎస్తేరు",
+    "testament": "OT",
+    "total_chapters": 10,
+    "book_order": 17
+  },
+  {
+    "id": 18,
+    "name_english": "Job",
+    "name_telugu": "యోబు",
+    "testament": "OT",
+    "total_chapters": 42,
+    "book_order": 18
+  },
+  {
+    "id": 19,
+    "name_english": "Psalms",
+    "name_telugu": "కీర్తనలు",
+    "testament": "OT",
+    "total_chapters": 150,
+    "book_order": 19
+  },
+  {
+    "id": 20,
+    "name_english": "Proverbs",
+    "name_telugu": "సామెతలు",
+    "testament": "OT",
+    "total_chapters": 31,
+    "book_order": 20
+  },
+  {
+    "id": 21,
+    "name_english": "Ecclesiastes",
+    "name_telugu": "ప్రసంగి",
+    "testament": "OT",
+    "total_chapters": 12,
+    "book_order": 21
+  },
+  {
+    "id": 22,
+    "name_english": "Song of Solomon",
+    "name_telugu": "పరమగీతము",
+    "testament": "OT",
+    "total_chapters": 8,
+    "book_order": 22
+  },
+  {
+    "id": 23,
+    "name_english": "Isaiah",
+    "name_telugu": "యెషయా",
+    "testament": "OT",
+    "total_chapters": 66,
+    "book_order": 23
+  },
+  {
+    "id": 24,
+    "name_english": "Jeremiah",
+    "name_telugu": "యిర్మియా",
+    "testament": "OT",
+    "total_chapters": 52,
+    "book_order": 24
+  },
+  {
+    "id": 25,
+    "name_english": "Lamentations",
+    "name_telugu": "విలాపవాక్యములు",
+    "testament": "OT",
+    "total_chapters": 5,
+    "book_order": 25
+  },
+  {
+    "id": 26,
+    "name_english": "Ezekiel",
+    "name_telugu": "యెహెజ్కేలు",
+    "testament": "OT",
+    "total_chapters": 48,
+    "book_order": 26
+  },
+  {
+    "id": 27,
+    "name_english": "Daniel",
+    "name_telugu": "దానియేలు",
+    "testament": "OT",
+    "total_chapters": 12,
+    "book_order": 27
+  },
+  {
+    "id": 28,
+    "name_english": "Hosea",
+    "name_telugu": "హోషేయ",
+    "testament": "OT",
+    "total_chapters": 14,
+    "book_order": 28
+  },
+  {
+    "id": 29,
+    "name_english": "Joel",
+    "name_telugu": "యోవేలు",
+    "testament": "OT",
+    "total_chapters": 3,
+    "book_order": 29
+  },
+  {
+    "id": 30,
+    "name_english": "Amos",
+    "name_telugu": "ఆమోసు",
+    "testament": "OT",
+    "total_chapters": 9,
+    "book_order": 30
+  },
+  {
+    "id": 31,
+    "name_english": "Obadiah",
+    "name_telugu": "ఓబద్యా",
+    "testament": "OT",
+    "total_chapters": 1,
+    "book_order": 31
+  },
+  {
+    "id": 32,
+    "name_english": "Jonah",
+    "name_telugu": "యోనా",
+    "testament": "OT",
+    "total_chapters": 4,
+    "book_order": 32
+  },
+  {
+    "id": 33,
+    "name_english": "Micah",
+    "name_telugu": "మీకా",
+    "testament": "OT",
+    "total_chapters": 7,
+    "book_order": 33
+  },
+  {
+    "id": 34,
+    "name_english": "Nahum",
+    "name_telugu": "నహూము",
+    "testament": "OT",
+    "total_chapters": 3,
+    "book_order": 34
+  },
+  {
+    "id": 35,
+    "name_english": "Habakkuk",
+    "name_telugu": "హబక్కూకు",
+    "testament": "OT",
+    "total_chapters": 3,
+    "book_order": 35
+  },
+  {
+    "id": 36,
+    "name_english": "Zephaniah",
+    "name_telugu": "జెఫన్యా",
+    "testament": "OT",
+    "total_chapters": 3,
+    "book_order": 36
+  },
+  {
+    "id": 37,
+    "name_english": "Haggai",
+    "name_telugu": "హగ్గయి",
+    "testament": "OT",
+    "total_chapters": 2,
+    "book_order": 37
+  },
+  {
+    "id": 38,
+    "name_english": "Zechariah",
+    "name_telugu": "జెకర్యా",
+    "testament": "OT",
+    "total_chapters": 14,
+    "book_order": 38
+  },
+  {
+    "id": 39,
+    "name_english": "Malachi",
+    "name_telugu": "మలాకీ",
+    "testament": "OT",
+    "total_chapters": 4,
+    "book_order": 39
+  },
+  {
+    "id": 40,
+    "name_english": "Matthew",
+    "name_telugu": "మత్తయి సువార్త",
+    "testament": "NT",
+    "total_chapters": 28,
+    "book_order": 40
+  },
+  {
+    "id": 41,
+    "name_english": "Mark",
+    "name_telugu": "మార్కు సువార్త",
+    "testament": "NT",
+    "total_chapters": 16,
+    "book_order": 41
+  },
+  {
+    "id": 42,
+    "name_english": "Luke",
+    "name_telugu": "లూకా సువార్త",
+    "testament": "NT",
+    "total_chapters": 24,
+    "book_order": 42
+  },
+  {
+    "id": 43,
+    "name_english": "John",
+    "name_telugu": "యోహాను సువార్త",
+    "testament": "NT",
+    "total_chapters": 21,
+    "book_order": 43
+  },
+  {
+    "id": 44,
+    "name_english": "Acts",
+    "name_telugu": "అపొస్తలుల కార్యములు",
+    "testament": "NT",
+    "total_chapters": 28,
+    "book_order": 44
+  },
+  {
+    "id": 45,
+    "name_english": "Romans",
+    "name_telugu": "రోమీయులకు",
+    "testament": "NT",
+    "total_chapters": 16,
+    "book_order": 45
+  },
+  {
+    "id": 46,
+    "name_english": "1 Corinthians",
+    "name_telugu": "1 కొరింథీయులకు",
+    "testament": "NT",
+    "total_chapters": 16,
+    "book_order": 46
+  },
+  {
+    "id": 47,
+    "name_english": "2 Corinthians",
+    "name_telugu": "2 కొరింథీయులకు",
+    "testament": "NT",
+    "total_chapters": 13,
+    "book_order": 47
+  },
+  {
+    "id": 48,
+    "name_english": "Galatians",
+    "name_telugu": "గలతీయులకు",
+    "testament": "NT",
+    "total_chapters": 6,
+    "book_order": 48
+  },
+  {
+    "id": 49,
+    "name_english": "Ephesians",
+    "name_telugu": "ఎఫెసీయులకు",
+    "testament": "NT",
+    "total_chapters": 6,
+    "book_order": 49
+  },
+  {
+    "id": 50,
+    "name_english": "Philippians",
+    "name_telugu": "ఫిలిప్పీయులకు",
+    "testament": "NT",
+    "total_chapters": 4,
+    "book_order": 50
+  },
+  {
+    "id": 51,
+    "name_english": "Colossians",
+    "name_telugu": "కొలొస్సయులకు",
+    "testament": "NT",
+    "total_chapters": 4,
+    "book_order": 51
+  },
+  {
+    "id": 52,
+    "name_english": "1 Thessalonians",
+    "name_telugu": "1 థెస్సలొనీకయులకు",
+    "testament": "NT",
+    "total_chapters": 5,
+    "book_order": 52
+  },
+  {
+    "id": 53,
+    "name_english": "2 Thessalonians",
+    "name_telugu": "2 థెస్సలొనీకయులకు",
+    "testament": "NT",
+    "total_chapters": 3,
+    "book_order": 53
+  },
+  {
+    "id": 54,
+    "name_english": "1 Timothy",
+    "name_telugu": "1 తిమోతికి",
+    "testament": "NT",
+    "total_chapters": 6,
+    "book_order": 54
+  },
+  {
+    "id": 55,
+    "name_english": "2 Timothy",
+    "name_telugu": "2 తిమోతికి",
+    "testament": "NT",
+    "total_chapters": 4,
+    "book_order": 55
+  },
+  {
+    "id": 56,
+    "name_english": "Titus",
+    "name_telugu": "తీతుకు",
+    "testament": "NT",
+    "total_chapters": 3,
+    "book_order": 56
+  },
+  {
+    "id": 57,
+    "name_english": "Philemon",
+    "name_telugu": "ఫిలేమోనుకు",
+    "testament": "NT",
+    "total_chapters": 1,
+    "book_order": 57
+  },
+  {
+    "id": 58,
+    "name_english": "Hebrews",
+    "name_telugu": "హెబ్రీయులకు",
+    "testament": "NT",
+    "total_chapters": 13,
+    "book_order": 58
+  },
+  {
+    "id": 59,
+    "name_english": "James",
+    "name_telugu": "యాకోబు",
+    "testament": "NT",
+    "total_chapters": 5,
+    "book_order": 59
+  },
+  {
+    "id": 60,
+    "name_english": "1 Peter",
+    "name_telugu": "1 పేతురు",
+    "testament": "NT",
+    "total_chapters": 5,
+    "book_order": 60
+  },
+  {
+    "id": 61,
+    "name_english": "2 Peter",
+    "name_telugu": "2 పేతురు",
+    "testament": "NT",
+    "total_chapters": 3,
+    "book_order": 61
+  },
+  {
+    "id": 62,
+    "name_english": "1 John",
+    "name_telugu": "1 యోహాను",
+    "testament": "NT",
+    "total_chapters": 5,
+    "book_order": 62
+  },
+  {
+    "id": 63,
+    "name_english": "2 John",
+    "name_telugu": "2 యోహాను",
+    "testament": "NT",
+    "total_chapters": 1,
+    "book_order": 63
+  },
+  {
+    "id": 64,
+    "name_english": "3 John",
+    "name_telugu": "3 యోహాను",
+    "testament": "NT",
+    "total_chapters": 1,
+    "book_order": 64
+  },
+  {
+    "id": 65,
+    "name_english": "Jude",
+    "name_telugu": "యూదా",
+    "testament": "NT",
+    "total_chapters": 1,
+    "book_order": 65
+  },
+  {
+    "id": 66,
+    "name_english": "Revelation",
+    "name_telugu": "ప్రకటన గ్రంథము",
+    "testament": "NT",
+    "total_chapters": 22,
+    "book_order": 66
+  }
+]

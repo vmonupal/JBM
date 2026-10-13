@@ -5,10 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   ChevronLeft, ChevronRight, Maximize, Minimize, X, 
-  Tv, Type, SkipBack, SkipForward, Clock, Eye, EyeOff
+  Tv, Type, SkipBack, SkipForward, Clock, Eye, EyeOff, Settings as SettingsIcon
 } from 'lucide-react';
 import { Song } from '@/lib/types';
 import LiveClock from './LiveClock';
+import { useSettings } from '@/context/SettingsContext';
+import { useBranding } from '@/context/BrandingContext';
+import JbmBrandLogo from './JbmBrandLogo';
 
 interface SongProjectorProps {
   songs: Song[];
@@ -20,18 +23,24 @@ export default function SongProjector({
   initialSongId = 1
 }: SongProjectorProps) {
   const router = useRouter();
+  const { settings, updateSection, openSettings } = useSettings();
+  const { branding } = useBranding();
 
   const [currentSongIndex, setCurrentSongIndex] = useState<number>(
     songs.findIndex(s => s.id === initialSongId) >= 0 ? songs.findIndex(s => s.id === initialSongId) : 0
   );
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
 
-  // Presentation Settings
-  const [languageMode, setLanguageMode] = useState<'both' | 'telugu' | 'english' | 'other'>('both');
-  const [textSize, setTextSize] = useState<number>(44); // High visibility for sanctuary
+  // Presentation Settings from global settings
+  const songSettings = settings.projector.song;
+  const languageMode = songSettings.language;
+  const textSize = songSettings.fontSize || 44;
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const [showClock, setShowClock] = useState(true); // Requirement 17: Show/Hide clock in Projector Mode
+  const showClock = songSettings.showClock;
+  const showLogo = songSettings.showLogo;
+  const showSongTitle = songSettings.showSongTitle;
+  const showSongNumber = songSettings.showSongNumber;
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -126,17 +135,18 @@ export default function SongProjector({
       } else if (e.key.toLowerCase() === 'f') {
         toggleFullscreen();
       } else if (e.key.toLowerCase() === 'c') {
-        setShowClock(prev => !prev);
+        updateSection('projector', { song: { ...songSettings, showClock: !showClock } });
       } else if (e.key === 'Escape') {
-        if (!document.fullscreenElement) {
-          router.push(`/songs/${currentSong?.id || ''}`);
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+          setIsFullscreen(false);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [currentSongIndex, currentSlideIndex, songs.length, maxSlides, isFullscreen, showClock, songSettings]);
 
   return (
     <div className="fixed inset-0 z-50 bg-[#030712] text-slate-100 flex flex-col justify-between select-none overflow-hidden font-sans">
@@ -146,14 +156,16 @@ export default function SongProjector({
         
         {/* Left: Song Indicator & Live Clock */}
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-3 h-3 rounded-full bg-amber-400 animate-pulse" />
-            <span className="font-cinzel text-xs sm:text-sm tracking-widest text-amber-300 font-bold uppercase">
-              Song #{currentSong?.song_number}
-            </span>
-          </div>
+          {showSongNumber && (
+            <div className="flex items-center space-x-2.5">
+              <div className="w-3 h-3 rounded-full bg-amber-400 animate-pulse" />
+              <span className="font-cinzel text-xs sm:text-sm tracking-widest text-amber-300 font-bold uppercase">
+                Song #{currentSong?.song_number}
+              </span>
+            </div>
+          )}
 
-          {/* Live Date and Time in Projector Mode (Requirement 17) */}
+          {/* Live Date and Time in Projector Mode */}
           {showClock && (
             <div className="hidden sm:flex items-center pl-4 border-l border-slate-800 text-xs text-slate-300">
               <Clock className="w-3.5 h-3.5 text-amber-500 mr-2" />
@@ -163,25 +175,23 @@ export default function SongProjector({
         </div>
 
         {/* Center: Song Titles */}
-        <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none max-w-xl px-4 truncate">
-          <h2 className="font-cinzel font-black tracking-wider text-amber-200 text-lg sm:text-2xl drop-shadow-md truncate">
-            {currentSong?.title_english}
-          </h2>
-          <p className="font-telugu text-amber-400 font-bold text-base sm:text-xl truncate mt-0.5">
-            {currentSong?.title_telugu}
-          </p>
-        </div>
-
-        {/* UPPER-RIGHT CORNER: OFFICIAL REVIVAL CHAPEL CHURCH LOGO (Requirement 10 & 16) */}
-        <div className="flex items-center space-x-3">
-          <div className="p-1 rounded-xl bg-white border border-amber-400/50 shadow-xl">
-            <img
-              src="/images/revival-chapel-logo.jpg"
-              alt="Revival Chapel Official Logo"
-              className="h-10 sm:h-14 w-auto object-contain rounded"
-            />
+        {showSongTitle && (
+          <div className="absolute left-1/2 -translate-x-1/2 text-center pointer-events-none max-w-xl px-4 truncate">
+            <h2 className="font-cinzel font-black tracking-wider text-amber-200 text-lg sm:text-2xl drop-shadow-md truncate">
+              {currentSong?.title_english}
+            </h2>
+            <p className="font-telugu text-amber-400 font-bold text-base sm:text-xl truncate mt-0.5">
+              {currentSong?.title_telugu}
+            </p>
           </div>
-        </div>
+        )}
+
+        {/* UPPER-RIGHT CORNER: JBM BRAND / LOGO */}
+        {showLogo && (
+          <div className="flex items-center space-x-3">
+            <JbmBrandLogo variant="projector" showSubtitle={false} />
+          </div>
+        )}
 
       </header>
 
@@ -277,7 +287,7 @@ export default function SongProjector({
           {/* Language Options */}
           <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800">
             <button
-              onClick={() => setLanguageMode('telugu')}
+              onClick={() => updateSection('projector', { song: { ...songSettings, language: 'telugu' } })}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                 languageMode === 'telugu' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
               }`}
@@ -285,7 +295,7 @@ export default function SongProjector({
               Telugu
             </button>
             <button
-              onClick={() => setLanguageMode('both')}
+              onClick={() => updateSection('projector', { song: { ...songSettings, language: 'both' } })}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                 languageMode === 'both' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
               }`}
@@ -293,7 +303,7 @@ export default function SongProjector({
               {currentSong?.lyrics_other ? 'All' : 'Both'}
             </button>
             <button
-              onClick={() => setLanguageMode('english')}
+              onClick={() => updateSection('projector', { song: { ...songSettings, language: 'english' } })}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                 languageMode === 'english' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
               }`}
@@ -302,7 +312,7 @@ export default function SongProjector({
             </button>
             {currentSong?.lyrics_other && (
               <button
-                onClick={() => setLanguageMode('other')}
+                onClick={() => updateSection('projector', { song: { ...songSettings, language: 'other' } })}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                   languageMode === 'other' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
                 }`}
@@ -316,25 +326,34 @@ export default function SongProjector({
           <div className="flex items-center space-x-2 text-slate-400">
             <span className="text-[11px] font-semibold">Font:</span>
             <button
-              onClick={() => setTextSize(s => Math.max(s - 4, 24))}
+              onClick={() => updateSection('projector', { song: { ...songSettings, fontSize: Math.max(textSize - 4, 24) } })}
               className="px-2.5 py-1 bg-slate-900 rounded-lg border border-slate-800 hover:text-white font-bold"
             >
               A-
             </button>
             <span className="font-mono text-amber-300 w-10 text-center font-bold">{textSize}px</span>
             <button
-              onClick={() => setTextSize(s => Math.min(s + 4, 84))}
+              onClick={() => updateSection('projector', { song: { ...songSettings, fontSize: Math.min(textSize + 4, 84) } })}
               className="px-2.5 py-1 bg-slate-900 rounded-lg border border-slate-800 hover:text-white font-bold"
             >
               A+
             </button>
           </div>
 
-          {/* Clock Toggle & Fullscreen & Exit */}
+          {/* Settings, Clock Toggle & Fullscreen & Exit */}
           <div className="flex items-center space-x-2">
-            {/* Show/Hide Clock button (Requirement 17) */}
+            {/* Settings Trigger */}
             <button
-              onClick={() => setShowClock(!showClock)}
+              onClick={() => openSettings('projector')}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-500 text-amber-400 hover:text-amber-300"
+              title="Open Projector Settings"
+            >
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+
+            {/* Show/Hide Clock button */}
+            <button
+              onClick={() => updateSection('projector', { song: { ...songSettings, showClock: !showClock } })}
               className={`p-2 rounded-xl border transition-colors ${
                 showClock
                   ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'

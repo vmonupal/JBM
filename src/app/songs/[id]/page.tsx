@@ -6,17 +6,19 @@ import { useRouter } from 'next/navigation';
 import { 
   Play, Pause, Heart, Share2, Copy, Tv, ArrowLeft, 
   Check, Volume2, Video, Music, Edit3, Trash2, 
-  History, RotateCcw, AlertTriangle, BookOpen, Clock, Copy as DuplicateIcon
+  History, RotateCcw, AlertTriangle, BookOpen, Clock, Copy as DuplicateIcon, Settings as SettingsIcon
 } from 'lucide-react';
 import { Song, Category } from '@/lib/types';
 import { usePlayer } from '@/components/MusicPlayer';
 import SongEditorModal from '@/components/SongEditorModal';
 import SongVersionHistoryModal from '@/components/SongVersionHistoryModal';
+import { useSettings } from '@/context/SettingsContext';
 
 export default function SongDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const { playSong, isPlaying, currentSong, togglePlay } = usePlayer();
+  const { settings, openSettings } = useSettings();
 
   const [song, setSong] = useState<Song | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -24,8 +26,11 @@ export default function SongDetailPage({ params }: { params: Promise<{ id: strin
   const [isCopied, setIsCopied] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
-  // Requirement 5 & 2: Song Language Display Buttons
-  const [languageOption, setLanguageOption] = useState<'telugu' | 'english' | 'other' | 'both'>('both');
+  // Song settings
+  const songSettings = settings.songs;
+  const [languageOption, setLanguageOption] = useState<'telugu' | 'english' | 'other' | 'both'>(
+    songSettings.songLanguage || 'both'
+  );
   const [layoutMode, setLayoutMode] = useState<'stacked' | 'side-by-side'>('stacked');
 
   // Modals
@@ -67,7 +72,7 @@ ${song.lyrics_telugu}
 [English Lyrics]
 ${song.lyrics_english}
 
-— Revival Chapel`;
+— JBM`;
     navigator.clipboard.writeText(text);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
@@ -226,9 +231,11 @@ ${song.lyrics_english}
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 pb-6 border-b border-amber-500/20">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-cinzel text-xs font-black text-amber-600 dark:text-amber-400 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                Song #{song.song_number}
-              </span>
+              {songSettings.showSongNumber && (
+                <span className="font-cinzel text-xs font-black text-amber-600 dark:text-amber-400 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  Song #{song.song_number}
+                </span>
+              )}
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 {song.category_name || 'Worship'}
               </span>
@@ -237,7 +244,7 @@ ${song.lyrics_english}
                   {song.language}
                 </span>
               )}
-              {song.bible_reference && (
+              {songSettings.showRelatedBibleVerse && song.bible_reference && (
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 flex items-center space-x-1">
                   <BookOpen className="w-3 h-3" />
                   <span>Ref: {song.bible_reference}</span>
@@ -253,8 +260,8 @@ ${song.lyrics_english}
             </p>
 
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 pt-1">
-              {song.author && <span>Written by: <strong className="text-slate-600 dark:text-slate-300">{song.author}</strong></span>}
-              {song.composer && <span>Composer: <strong className="text-slate-600 dark:text-slate-300">{song.composer}</strong></span>}
+              {songSettings.showAuthor && song.author && <span>Written by: <strong className="text-slate-600 dark:text-slate-300">{song.author}</strong></span>}
+              {songSettings.showComposer && song.composer && <span>Composer: <strong className="text-slate-600 dark:text-slate-300">{song.composer}</strong></span>}
               {song.source_origin && <span>Source: <strong className="text-slate-600 dark:text-slate-300">{song.source_origin}</strong></span>}
             </div>
           </div>
@@ -273,7 +280,7 @@ ${song.lyrics_english}
               <span>{isCurrentAudioPlaying ? 'Pause Audio' : 'Play Audio'}</span>
             </button>
 
-            {/* PROJECTOR BUTTON (Requirement 10) */}
+            {/* PROJECTOR BUTTON */}
             <Link
               href={`/songs/projector?songId=${song.id}`}
               className="px-4 py-2.5 bg-slate-950 text-amber-300 hover:bg-slate-900 border border-amber-500/40 font-bold text-xs sm:text-sm rounded-xl shadow transition-all flex items-center space-x-1.5 hover:scale-105"
@@ -281,6 +288,16 @@ ${song.lyrics_english}
               <Tv className="w-4 h-4 text-amber-400" />
               <span>PROJECTOR</span>
             </Link>
+
+            {/* Song Display Settings */}
+            <button
+              onClick={() => openSettings('songs')}
+              className="px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center space-x-1.5"
+              title="Song Display Settings"
+            >
+              <SettingsIcon className="w-4 h-4 text-amber-500" />
+              <span>Settings</span>
+            </button>
 
             {/* [ Edit ] BUTTON (Requirement 6) */}
             <button

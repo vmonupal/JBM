@@ -3,21 +3,28 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Tv, Search, Menu, X, Sparkles } from 'lucide-react';
+import { Tv, Search, Menu, X, Sparkles, Settings as SettingsIcon } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import LiveClock from './LiveClock';
+import { useSettings } from '@/context/SettingsContext';
+import { useBranding } from '@/context/BrandingContext';
+import JbmBrandLogo from './JbmBrandLogo';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { openSettings } = useSettings();
+  const { branding } = useBranding();
 
-  // Exact links mandated by specification (Requirement 22)
+  // Navigation Links including dedicated POSTERS and POSTER PROJECTOR
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/bible', label: 'Bible' },
     { href: '/songs', label: 'Songs' },
+    { href: '/posters', label: 'Posters' },
     { href: '/bible/projector', label: 'Bible Projector' },
     { href: '/songs/projector', label: 'Song Projector' },
+    { href: '/posters/projector', label: 'Poster Projector' },
     { href: '/#daily-verse', label: 'Daily Verse' },
     { href: '/about', label: 'About' },
   ];
@@ -27,21 +34,14 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Left: Church Brand & Subtitle */}
+          {/* Left: JBM Brand & Subtitle */}
           <div className="flex items-center space-x-3">
             <Link href="/" className="flex items-center space-x-2 group">
-              <div className="flex flex-col">
-                <span className="font-cinzel font-black tracking-widest text-xl sm:text-2xl text-slate-900 dark:text-amber-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                  REVIVAL CHAPEL
-                </span>
-                <span className="text-[10px] tracking-widest uppercase font-medium text-amber-700 dark:text-amber-400">
-                  Public Bible & Worship Library
-                </span>
-              </div>
+              <JbmBrandLogo variant="header" showSubtitle={true} />
             </Link>
           </div>
 
-          {/* Center: Desktop Navigation Links (Specification Requirement 22) */}
+          {/* Center: Desktop Navigation Links */}
           <nav className="hidden xl:flex items-center space-x-1">
             {navLinks.map((link) => {
               const isDailyVerse = link.href.includes('#daily-verse');
@@ -62,10 +62,10 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Right: Actions, Live Date/Time & Official Revival Chapel Logo */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Right: Actions, Live Date/Time & Official Logo */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
             
-            {/* Live Date and Time (Requirement 17) */}
+            {/* Live Date and Time */}
             <div className="hidden md:flex flex-col text-right text-xs">
               <LiveClock stacked showSeconds={false} className="text-slate-600 dark:text-slate-300" />
             </div>
@@ -82,18 +82,35 @@ export default function Navbar() {
             {/* Dark/Light Mode Toggle */}
             <ThemeToggle />
 
-            {/* OFFICIAL REVIVAL CHAPEL CHURCH LOGO (TOP-RIGHT CORNER - Requirement 16) */}
-            <Link
-              href="/"
-              title="Revival Chapel Official Logo"
-              className="flex items-center justify-center p-1 rounded-xl bg-white dark:bg-slate-900 border border-amber-500/30 shadow-xs hover:shadow-md transition-all hover:scale-105 ml-1"
+            {/* Centralized SETTINGS Icon Button */}
+            <button
+              type="button"
+              onClick={() => openSettings()}
+              title="Open Website & Bible Settings"
+              className="p-2 rounded-xl border border-amber-500/30 hover:border-amber-500 bg-amber-50/50 dark:bg-slate-800/80 text-amber-700 dark:text-amber-300 hover:scale-105 transition-all shadow-xs flex items-center space-x-1"
+              aria-label="Open Settings"
             >
-              <img
-                src="/images/revival-chapel-logo.jpg"
-                alt="Revival Chapel Official Logo"
-                className="h-10 sm:h-12 w-auto object-contain rounded-md"
-              />
-            </Link>
+              <SettingsIcon className="w-4 h-4 text-amber-500" />
+              <span className="hidden sm:inline text-xs font-bold text-slate-800 dark:text-slate-200 pr-1">Settings</span>
+            </button>
+
+            {/* OWNER CONFIGURABLE CHURCH LOGO (TOP-RIGHT CORNER) */}
+            {branding.show_logo_header && !branding.use_text_logo && Boolean(branding.logo_url) && (
+              <Link
+                href="/"
+                title={`${branding.website_name} Official Logo`}
+                className="hidden sm:flex items-center justify-center p-1 rounded-xl bg-white dark:bg-slate-900 border border-amber-500/30 shadow-xs hover:shadow-md transition-all hover:scale-105 ml-1"
+              >
+                <img
+                  src={branding.logo_url}
+                  alt={`${branding.website_name} Official Logo`}
+                  className="h-10 sm:h-12 w-auto object-contain rounded-md"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+              </Link>
+            )}
 
             {/* Mobile Menu Hamburger */}
             <button
@@ -137,6 +154,17 @@ export default function Navbar() {
           })}
 
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                openSettings();
+              }}
+              className="flex items-center justify-center space-x-2 py-2.5 bg-amber-500/15 border border-amber-500/40 text-amber-800 dark:text-amber-300 font-bold text-sm rounded-lg"
+            >
+              <SettingsIcon className="w-4 h-4 text-amber-500" />
+              <span>Website & Bible Settings</span>
+            </button>
             <Link
               href="/bible/projector"
               onClick={() => setMobileMenuOpen(false)}

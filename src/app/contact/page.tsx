@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Clock, Church, BookOpen, Music, Tv } from 'lucide-react';
+import JbmBrandLogo from '@/components/JbmBrandLogo';
 
 export default function ContactPage() {
   return (
@@ -14,10 +15,10 @@ export default function ContactPage() {
           <span>Sanctuary Location & Information</span>
         </span>
         <h1 className="font-cinzel text-3xl sm:text-5xl font-black text-slate-900 dark:text-amber-100">
-          Revival Chapel Church
+          JBM
         </h1>
         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto">
-          We warmly welcome everyone to join us for worship in Telugu and English. Our sanctuary is open to all visitors without any registration or account requirements.
+          We warmly welcome everyone to join us for worship in Telugu and English. Open to all visitors without any registration or account requirements.
         </p>
       </div>
 
@@ -26,27 +27,15 @@ export default function ContactPage() {
         {/* Sanctuary Location & Contact Info */}
         <div className="bg-white dark:bg-slate-900 border border-amber-500/20 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
           <div className="flex items-center space-x-3">
-            <div className="p-1 rounded-xl bg-white border border-amber-400/40 shadow">
-              <img
-                src="/images/revival-chapel-logo.jpg"
-                alt="Revival Chapel Official Logo"
-                className="h-10 w-auto object-contain rounded"
-              />
-            </div>
-            <div>
-              <h3 className="font-cinzel text-lg font-bold text-slate-900 dark:text-slate-100">
-                Revival Chapel Sanctuary
-              </h3>
-              <p className="text-xs text-amber-600 dark:text-amber-400">Main Worship Center</p>
-            </div>
+            <JbmBrandLogo variant="header" showSubtitle={true} />
           </div>
 
           <div className="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
             <div className="flex items-start space-x-3">
               <MapPin className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-slate-900 dark:text-slate-100">Church Address</p>
-                <p className="text-slate-500 dark:text-slate-400 mt-0.5">Revival Chapel Sanctuary, Church Street, Fellowship Hall</p>
+                <p className="font-semibold text-slate-900 dark:text-slate-100">Sanctuary Address</p>
+                <p className="text-slate-500 dark:text-slate-400 mt-0.5">JBM Sanctuary, Church Street, Fellowship Hall</p>
               </div>
             </div>
             
